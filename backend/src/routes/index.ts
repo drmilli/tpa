@@ -1,0 +1,25 @@
+import { Router } from 'express';
+import authRoutes from './auth.routes';
+import politicianRoutes from './politician.routes';
+import officeRoutes from './office.routes';
+import rankingRoutes from './ranking.routes';
+import pollRoutes from './poll.routes';
+import blogRoutes from './blog.routes';
+import locationRoutes from './location.routes';
+import contactRoutes from './contact.routes';
+import { apiLimiter } from '../middleware/rateLimiter';
+
+const router = Router();
+
+router.use(apiLimiter);
+
+router.use('/auth', authRoutes);
+router.use('/politicians', politicianRoutes);
+router.use('/offices', officeRoutes);
+router.use('/rankings', rankingRoutes);
+router.use('/polls', pollRoutes);
+router.use('/blogs', blogRoutes);
+router.use('/locations', locationRoutes);
+router.use('/contact', contactRoutes);
+
+export default router;

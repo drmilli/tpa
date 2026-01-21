@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(npm install -D nodemon)",
+      "Bash(npm run dev:*)"
+    ]
+  }
+}
