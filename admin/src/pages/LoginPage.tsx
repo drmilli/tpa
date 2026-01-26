@@ -22,7 +22,7 @@ export default function LoginPage() {
       const response = await api.post('/auth/login', { email, password });
       const { user, token } = response.data.data;
 
-      if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+      if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
         toast.error('Access denied. Admin privileges required.');
         return;
       }

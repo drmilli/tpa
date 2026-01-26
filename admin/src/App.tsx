@@ -16,7 +16,7 @@ import UsersPage from './pages/UsersPage';
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
-  if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')) {
+  if (!isAuthenticated || (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')) {
     return <Navigate to="/login" replace />;
   }
 

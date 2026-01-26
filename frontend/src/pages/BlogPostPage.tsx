@@ -1,15 +1,77 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Calendar, Clock, User, Eye, Share2, Facebook, Twitter,
-  ChevronLeft, Tag, BookOpen, ThumbsUp, MessageSquare
+  ChevronLeft, Tag, BookOpen, ThumbsUp, ThumbsDown, MessageSquare,
+  Send, Reply, MoreHorizontal, Check, Copy, Linkedin, Mail
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+interface Comment {
+  id: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  content: string;
+  createdAt: string;
+  likes: number;
+  dislikes: number;
+  replies?: Comment[];
+}
 
 export default function BlogPostPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
+
+  // State management
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [likeCount, setLikeCount] = useState(342);
+  const [dislikeCount, setDislikeCount] = useState(12);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [comments, setComments] = useState<Comment[]>([
+    {
+      id: '1',
+      author: { name: 'Chukwuemeka Obi' },
+      content: 'This is a very informative article. Every Nigerian should understand how our electoral process works. Thank you for breaking it down so clearly!',
+      createdAt: '2024-01-16T10:30:00',
+      likes: 24,
+      dislikes: 2,
+      replies: [
+        {
+          id: '1-1',
+          author: { name: 'Amina Yusuf' },
+          content: 'I completely agree! Shared this with my family members who are first-time voters.',
+          createdAt: '2024-01-16T11:45:00',
+          likes: 8,
+          dislikes: 0,
+        }
+      ]
+    },
+    {
+      id: '2',
+      author: { name: 'Oluwaseun Adebayo' },
+      content: 'The section about BVAS is particularly helpful. Many people still don\'t understand how the accreditation system works.',
+      createdAt: '2024-01-17T09:15:00',
+      likes: 15,
+      dislikes: 1,
+    },
+    {
+      id: '3',
+      author: { name: 'Fatima Bello' },
+      content: 'Great article! Would love to see more content about how to verify election results through the IReV portal.',
+      createdAt: '2024-01-18T14:20:00',
+      likes: 31,
+      dislikes: 0,
+    },
+  ]);
 
   // Mock data - will be replaced with API data
   const post = {
-    id: id || '1',
+    id: slug || '1',
     title: 'Understanding Nigeria\'s Electoral Process: A Complete Guide',
     excerpt: 'A comprehensive guide to how elections work in Nigeria, from voter registration to the final vote count.',
     content: `
@@ -62,8 +124,6 @@ export default function BlogPostPage() {
     publishedAt: '2024-01-15',
     readTime: 8,
     views: 2500,
-    likes: 342,
-    comments: 28,
     tags: ['Elections', 'Democracy', 'Civic Education', 'INEC', 'Voting'],
   };
 
@@ -102,13 +162,230 @@ export default function BlogPostPage() {
     }
   };
 
+  // Like/Dislike handlers
+  const handleLike = () => {
+    if (liked) {
+      setLiked(false);
+      setLikeCount(prev => prev - 1);
+    } else {
+      setLiked(true);
+      setLikeCount(prev => prev + 1);
+      if (disliked) {
+        setDisliked(false);
+        setDislikeCount(prev => prev - 1);
+      }
+    }
+  };
+
+  const handleDislike = () => {
+    if (disliked) {
+      setDisliked(false);
+      setDislikeCount(prev => prev - 1);
+    } else {
+      setDisliked(true);
+      setDislikeCount(prev => prev + 1);
+      if (liked) {
+        setLiked(false);
+        setLikeCount(prev => prev - 1);
+      }
+    }
+  };
+
+  // Share handlers
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareTitle = post.title;
+
+  const handleShare = (platform: string) => {
+    let url = '';
+
+    switch (platform) {
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'email':
+        url = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(`Check out this article: ${shareUrl}`)}`;
+        window.location.href = url;
+        return;
+      case 'copy':
+        navigator.clipboard.writeText(shareUrl);
+        toast.success('Link copied to clipboard!');
+        setShowShareMenu(false);
+        return;
+    }
+
+    if (url) {
+      window.open(url, '_blank', 'width=600,height=400');
+    }
+    setShowShareMenu(false);
+  };
+
+  // Comment handlers
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+
+    const newComment: Comment = {
+      id: Date.now().toString(),
+      author: { name: 'Anonymous User' },
+      content: commentText,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+    };
+
+    setComments(prev => [newComment, ...prev]);
+    setCommentText('');
+    toast.success('Comment posted successfully!');
+  };
+
+  const handleAddReply = (commentId: string) => {
+    if (!replyText.trim()) return;
+
+    const newReply: Comment = {
+      id: `${commentId}-${Date.now()}`,
+      author: { name: 'Anonymous User' },
+      content: replyText,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
+    };
+
+    setComments(prev => prev.map(comment => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          replies: [...(comment.replies || []), newReply]
+        };
+      }
+      return comment;
+    }));
+
+    setReplyText('');
+    setReplyingTo(null);
+    toast.success('Reply posted successfully!');
+  };
+
+  const handleCommentLike = (commentId: string, isReply = false, parentId?: string) => {
+    setComments(prev => prev.map(comment => {
+      if (isReply && parentId && comment.id === parentId) {
+        return {
+          ...comment,
+          replies: comment.replies?.map(reply =>
+            reply.id === commentId ? { ...reply, likes: reply.likes + 1 } : reply
+          )
+        };
+      }
+      if (comment.id === commentId) {
+        return { ...comment, likes: comment.likes + 1 };
+      }
+      return comment;
+    }));
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const CommentComponent = ({ comment, isReply = false, parentId }: { comment: Comment; isReply?: boolean; parentId?: string }) => (
+    <div className={`${isReply ? 'ml-12 mt-4' : ''}`}>
+      <div className="flex items-start space-x-3">
+        <div className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm`}>
+          {comment.author.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+        </div>
+        <div className="flex-1">
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold text-gray-900 text-sm">{comment.author.name}</span>
+                <span className="text-xs text-gray-400">{formatDate(comment.createdAt)}</span>
+              </div>
+              <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-gray-700 text-sm">{comment.content}</p>
+          </div>
+
+          {/* Comment Actions */}
+          <div className="flex items-center space-x-4 mt-2 px-2">
+            <button
+              onClick={() => handleCommentLike(comment.id, isReply, parentId)}
+              className="flex items-center space-x-1 text-gray-500 hover:text-primary-600 transition text-sm"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              <span>{comment.likes}</span>
+            </button>
+            {!isReply && (
+              <button
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className="flex items-center space-x-1 text-gray-500 hover:text-primary-600 transition text-sm"
+              >
+                <Reply className="w-4 h-4" />
+                <span>Reply</span>
+              </button>
+            )}
+          </div>
+
+          {/* Reply Input */}
+          {replyingTo === comment.id && (
+            <div className="mt-3 flex items-start space-x-2">
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-xs font-semibold flex-shrink-0">
+                AU
+              </div>
+              <div className="flex-1 flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Write a reply..."
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddReply(comment.id)}
+                />
+                <button
+                  onClick={() => handleAddReply(comment.id)}
+                  disabled={!replyText.trim()}
+                  className="p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Replies */}
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="mt-2">
+              {comment.replies.map(reply => (
+                <CommentComponent key={reply.id} comment={reply} isReply parentId={comment.id} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero/Header */}
       <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-12">
         <div className="container mx-auto px-4">
           <Link
-            to="/blog"
+            to="/blogs"
             className="inline-flex items-center text-primary-100 hover:text-white mb-6 transition"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -176,27 +453,91 @@ export default function BlogPostPage() {
 
               {/* Engagement */}
               <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center space-x-6">
-                  <button className="flex items-center space-x-2 text-gray-500 hover:text-primary-600 transition">
-                    <ThumbsUp className="w-5 h-5" />
-                    <span>{post.likes}</span>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={handleLike}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full transition ${
+                      liked
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    <ThumbsUp className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+                    <span className="font-medium">{likeCount}</span>
                   </button>
-                  <button className="flex items-center space-x-2 text-gray-500 hover:text-primary-600 transition">
+                  <button
+                    onClick={handleDislike}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-full transition ${
+                      disliked
+                        ? 'bg-red-100 text-red-700'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    <ThumbsDown className={`w-5 h-5 ${disliked ? 'fill-current' : ''}`} />
+                    <span className="font-medium">{dislikeCount}</span>
+                  </button>
+                  <div className="flex items-center space-x-2 text-gray-500 px-4 py-2">
                     <MessageSquare className="w-5 h-5" />
-                    <span>{post.comments} comments</span>
-                  </button>
+                    <span className="font-medium">{comments.length} comments</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-500">Share:</span>
-                  <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                    <Facebook className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition">
-                    <Twitter className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition">
+
+                {/* Share Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowShareMenu(!showShareMenu)}
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-full transition"
+                  >
                     <Share2 className="w-5 h-5" />
+                    <span className="font-medium hidden sm:inline">Share</span>
                   </button>
+
+                  {showShareMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowShareMenu(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-20">
+                        <button
+                          onClick={() => handleShare('facebook')}
+                          className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-50 transition"
+                        >
+                          <Facebook className="w-5 h-5 text-blue-600" />
+                          <span className="text-gray-700">Share on Facebook</span>
+                        </button>
+                        <button
+                          onClick={() => handleShare('twitter')}
+                          className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-50 transition"
+                        >
+                          <Twitter className="w-5 h-5 text-sky-500" />
+                          <span className="text-gray-700">Share on Twitter</span>
+                        </button>
+                        <button
+                          onClick={() => handleShare('linkedin')}
+                          className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-50 transition"
+                        >
+                          <Linkedin className="w-5 h-5 text-blue-700" />
+                          <span className="text-gray-700">Share on LinkedIn</span>
+                        </button>
+                        <button
+                          onClick={() => handleShare('email')}
+                          className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-50 transition"
+                        >
+                          <Mail className="w-5 h-5 text-gray-600" />
+                          <span className="text-gray-700">Share via Email</span>
+                        </button>
+                        <div className="border-t border-gray-100 my-1" />
+                        <button
+                          onClick={() => handleShare('copy')}
+                          className="w-full px-4 py-2.5 flex items-center space-x-3 hover:bg-gray-50 transition"
+                        >
+                          <Copy className="w-5 h-5 text-gray-600" />
+                          <span className="text-gray-700">Copy Link</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </article>
@@ -215,6 +556,54 @@ export default function BlogPostPage() {
                   </Link>
                 </div>
               </div>
+            </div>
+
+            {/* Comments Section */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 mt-6 shadow-sm">
+              <h3 className="font-bold text-gray-900 text-lg mb-6 flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2 text-primary-600" />
+                Comments ({comments.length})
+              </h3>
+
+              {/* Add Comment */}
+              <div className="flex items-start space-x-3 mb-8">
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-semibold flex-shrink-0">
+                  AU
+                </div>
+                <div className="flex-1">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                  />
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!commentText.trim()}
+                      className="px-5 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center space-x-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Post Comment</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Comments List */}
+              <div className="space-y-6">
+                {comments.map(comment => (
+                  <CommentComponent key={comment.id} comment={comment} />
+                ))}
+              </div>
+
+              {comments.length === 0 && (
+                <div className="text-center py-8">
+                  <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No comments yet. Be the first to share your thoughts!</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -252,7 +641,7 @@ export default function BlogPostPage() {
                 {relatedPosts.map((relatedPost) => (
                   <Link
                     key={relatedPost.id}
-                    to={`/blog/${relatedPost.id}`}
+                    to={`/blogs/${relatedPost.id}`}
                     className="block group"
                   >
                     <span className={`text-xs px-2 py-0.5 rounded ${getCategoryColor(relatedPost.category)}`}>

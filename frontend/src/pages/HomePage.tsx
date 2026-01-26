@@ -384,7 +384,7 @@ export default function HomePage() {
               </div>
             </div>
             <Link
-              to="/blog"
+              to="/blogs"
               className="hidden sm:flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
             >
               All Articles <ChevronRight className="w-4 h-4" />
@@ -428,7 +428,7 @@ export default function HomePage() {
           </div>
 
           <Link
-            to="/blog"
+            to="/blogs"
             className="sm:hidden flex items-center justify-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors mt-6"
           >
             View All Articles <ChevronRight className="w-4 h-4" />

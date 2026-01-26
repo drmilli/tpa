@@ -240,7 +240,7 @@ export default function BlogsPage() {
                     </span>
                     <span className="text-sm text-gray-500">Featured</span>
                   </div>
-                  <Link to={`/blog/${featuredPost.id}`}>
+                  <Link to={`/blogs/${featuredPost.id}`}>
                     <h2 className="text-2xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition">
                       {featuredPost.title}
                     </h2>
@@ -262,7 +262,7 @@ export default function BlogsPage() {
                       </div>
                     </div>
                     <Link
-                      to={`/blog/${featuredPost.id}`}
+                      to={`/blogs/${featuredPost.id}`}
                       className="text-primary-600 hover:text-primary-700 font-medium text-sm inline-flex items-center"
                     >
                       Read More
@@ -294,7 +294,7 @@ export default function BlogsPage() {
                             {new Date(post.publishedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <Link to={`/blog/${post.id}`}>
+                        <Link to={`/blogs/${post.id}`}>
                           <h3 className="font-bold text-gray-900 mb-1 group-hover:text-primary-600 transition line-clamp-2">
                             {post.title}
                           </h3>
@@ -316,7 +316,7 @@ export default function BlogsPage() {
                             </span>
                           </div>
                           <Link
-                            to={`/blog/${post.id}`}
+                            to={`/blogs/${post.id}`}
                             className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                           >
                             Read
@@ -348,7 +348,7 @@ export default function BlogsPage() {
               </h3>
               <div className="space-y-4">
                 {popularPosts.map((post, index) => (
-                  <Link key={post.id} to={`/blog/${post.id}`} className="flex items-start gap-3 group">
+                  <Link key={post.id} to={`/blogs/${post.id}`} className="flex items-start gap-3 group">
                     <span className="text-2xl font-bold text-gray-200 group-hover:text-primary-400 transition">
                       {String(index + 1).padStart(2, '0')}
                     </span>

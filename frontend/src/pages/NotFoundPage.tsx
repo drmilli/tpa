@@ -67,7 +67,7 @@ export default function NotFoundPage() {
               Polls
             </Link>
             <Link
-              to="/blog"
+              to="/blogs"
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm"
             >
               Blog
