@@ -35,6 +35,9 @@ export default function Header() {
             <Link to="/polls" className="text-gray-700 hover:text-primary-600 transition">
               Polls
             </Link>
+            <Link to="/fact-check" className="text-gray-700 hover:text-primary-600 transition">
+              Fact Check
+            </Link>
             <Link to="/blogs" className="text-gray-700 hover:text-primary-600 transition">
               Blog
             </Link>
@@ -94,6 +97,9 @@ export default function Header() {
               </Link>
               <Link to="/polls" className="text-gray-700 hover:text-primary-600">
                 Polls
+              </Link>
+              <Link to="/fact-check" className="text-gray-700 hover:text-primary-600">
+                Fact Check
               </Link>
               <Link to="/blogs" className="text-gray-700 hover:text-primary-600">
                 Blog

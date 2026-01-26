@@ -14,10 +14,10 @@ export class RankingController {
         take: Number(limit),
         orderBy: [{ totalScore: 'desc' }, { rank: 'asc' }],
         include: {
-          politician: {
-            include: { state: true },
+          Politician: {
+            include: { State: true },
           },
-          office: true,
+          Office: true,
         },
       });
 
@@ -40,10 +40,10 @@ export class RankingController {
         take: Number(limit),
         orderBy: { rank: 'asc' },
         include: {
-          politician: {
-            include: { state: true },
+          Politician: {
+            include: { State: true },
           },
-          office: true,
+          Office: true,
         },
       });
 
@@ -63,7 +63,7 @@ export class RankingController {
       const rankings = await prisma.ranking.findMany({
         where: { politicianId },
         include: {
-          office: true,
+          Office: true,
         },
       });
 

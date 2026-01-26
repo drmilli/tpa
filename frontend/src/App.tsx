@@ -6,6 +6,7 @@ import PoliticiansPage from './pages/PoliticiansPage';
 import PoliticianProfilePage from './pages/PoliticianProfilePage';
 import RankingsPage from './pages/RankingsPage';
 import PollsPage from './pages/PollsPage';
+import FactCheckPage from './pages/FactCheckPage';
 import BlogsPage from './pages/BlogsPage';
 import BlogPostPage from './pages/BlogPostPage';
 import ContactPage from './pages/ContactPage';
@@ -24,6 +25,7 @@ function App() {
             <Route path="politicians/:id" element={<PoliticianProfilePage />} />
             <Route path="rankings" element={<RankingsPage />} />
             <Route path="polls" element={<PollsPage />} />
+            <Route path="fact-check" element={<FactCheckPage />} />
             <Route path="blogs" element={<BlogsPage />} />
             <Route path="blogs/:slug" element={<BlogPostPage />} />
             <Route path="contact" element={<ContactPage />} />

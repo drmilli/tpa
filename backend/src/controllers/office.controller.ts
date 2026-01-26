@@ -27,7 +27,7 @@ export class OfficeController {
       const office = await prisma.office.findUnique({
         where: { id },
         include: {
-          metrics: true,
+          Metric: true,
         },
       });
 

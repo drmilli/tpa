@@ -38,10 +38,10 @@ export class PoliticianController {
           take: Number(limit),
           orderBy: { [sortBy as string]: order as string },
           include: {
-            state: true,
-            tenures: {
+            State: true,
+            Tenure: {
               where: { isCurrentRole: true },
-              include: { office: true },
+              include: { Office: true },
             },
           },
         }),
@@ -109,11 +109,11 @@ export class PoliticianController {
       const politician = await prisma.politician.findUnique({
         where: { id },
         include: {
-          state: true,
-          senatorialDistrict: true,
-          localGovernment: true,
-          tenures: {
-            include: { office: true },
+          State: true,
+          SenatorialDistrict: true,
+          LocalGovernment: true,
+          Tenure: {
+            include: { Office: true },
             orderBy: { startDate: 'desc' },
           },
         },
@@ -140,11 +140,11 @@ export class PoliticianController {
         prisma.politician.findUnique({
           where: { id },
           include: {
-            state: true,
-            senatorialDistrict: true,
-            localGovernment: true,
-            tenures: {
-              include: { office: true },
+            State: true,
+            SenatorialDistrict: true,
+            LocalGovernment: true,
+            Tenure: {
+              include: { Office: true },
               orderBy: { startDate: 'desc' },
             },
           },
@@ -153,7 +153,7 @@ export class PoliticianController {
         prisma.bill.findMany({ where: { politicianId: id }, orderBy: { dateProposed: 'desc' } }),
         prisma.project.findMany({ where: { politicianId: id }, orderBy: { createdAt: 'desc' } }),
         prisma.controversy.findMany({ where: { politicianId: id, isVerified: true } }),
-        prisma.ranking.findMany({ where: { politicianId: id }, include: { office: true } }),
+        prisma.ranking.findMany({ where: { politicianId: id }, include: { Office: true } }),
       ]);
 
       if (!politician) {
@@ -181,8 +181,8 @@ export class PoliticianController {
       const politician = await prisma.politician.create({
         data: req.body,
         include: {
-          state: true,
-          tenures: { include: { office: true } },
+          State: true,
+          Tenure: { include: { Office: true } },
         },
       });
 
@@ -203,8 +203,8 @@ export class PoliticianController {
         where: { id },
         data: req.body,
         include: {
-          state: true,
-          tenures: { include: { office: true } },
+          State: true,
+          Tenure: { include: { Office: true } },
         },
       });
 

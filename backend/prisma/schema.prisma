@@ -7,10 +7,375 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-  MODERATOR
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([userId])
+}
+
+model Bill {
+  id           String     @id @default(uuid())
+  politicianId String
+  title        String
+  description  String?
+  status       String     @default("PROPOSED")
+  dateProposed DateTime
+  sourceUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([politicianId])
+  @@index([status])
+}
+
+model Blog {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  content     String
+  excerpt     String?
+  coverImage  String?
+  authorId    String
+  category    String?
+  tags        String[]
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  views       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([slug])
+}
+
+model Contact {
+  id           String        @id @default(uuid())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  type         ContactType   @default(GENERAL)
+  subject      String
+  message      String
+  status       ContactStatus @default(NEW)
+  notes        String?
+  assignedToId String?
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([email])
+  @@index([status])
+  @@index([type])
+}
+
+model Controversy {
+  id           String     @id @default(uuid())
+  politicianId String
+  title        String
+  description  String
+  date         DateTime
+  sourceUrl    String
+  isVerified   Boolean    @default(false)
+  severity     String     @default("MEDIUM")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([isVerified])
+  @@index([politicianId])
+}
+
+model LocalGovernment {
+  id         String       @id @default(uuid())
+  name       String
+  stateId    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  State      State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  Politician Politician[]
+
+  @@unique([name, stateId])
+}
+
+model Metric {
+  id          String   @id @default(uuid())
+  officeId    String
+  name        String
+  description String?
+  weight      Float    @default(1.0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Office      Office   @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  Score       Score[]
+
+  @@unique([officeId, name])
+}
+
+model Office {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  type        OfficeType
+  level       String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  Metric      Metric[]
+  Ranking     Ranking[]
+  Tenure      Tenure[]
+}
+
+model Politician {
+  id                   String              @id @default(uuid())
+  firstName            String
+  lastName             String
+  middleName           String?
+  photoUrl             String?
+  dateOfBirth          DateTime?
+  partyAffiliation     PartyAffiliation
+  biography            String?
+  stateId              String?
+  senatorialDistrictId String?
+  localGovernmentId    String?
+  constituency         String?
+  performanceScore     Float               @default(0)
+  integrityStatus      String              @default("UNVERIFIED")
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  Bill                 Bill[]
+  Controversy          Controversy[]
+  LocalGovernment      LocalGovernment?    @relation(fields: [localGovernmentId], references: [id])
+  SenatorialDistrict   SenatorialDistrict? @relation(fields: [senatorialDistrictId], references: [id])
+  State                State?              @relation(fields: [stateId], references: [id])
+  Project              Project[]
+  Promise              Promise[]
+  Ranking              Ranking[]
+  Score                Score[]
+  Statement            Statement[]
+  Tenure               Tenure[]
+
+  @@index([partyAffiliation])
+  @@index([performanceScore])
+  @@index([stateId])
+}
+
+model Poll {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  question    String
+  options     Json
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Vote        Vote[]
+
+  @@index([endDate])
+  @@index([isActive])
+}
+
+model Project {
+  id           String     @id @default(uuid())
+  politicianId String
+  title        String
+  description  String
+  location     String?
+  budget       Float?
+  status       String     @default("ONGOING")
+  startDate    DateTime?
+  endDate      DateTime?
+  sourceUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([politicianId])
+  @@index([status])
+}
+
+model Promise {
+  id           String     @id @default(uuid())
+  politicianId String
+  title        String
+  description  String
+  status       String     @default("PENDING")
+  fulfillment  Int        @default(0)
+  sourceUrl    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([politicianId])
+  @@index([status])
+}
+
+model Ranking {
+  id           String     @id @default(uuid())
+  politicianId String
+  officeId     String
+  rank         Int
+  totalScore   Float
+  calculatedAt DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Office       Office     @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@unique([politicianId, officeId])
+  @@index([officeId, rank])
+  @@index([totalScore])
+}
+
+model Score {
+  id           String     @id @default(uuid())
+  politicianId String
+  metricId     String
+  value        Float
+  calculatedAt DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Metric       Metric     @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@unique([politicianId, metricId])
+  @@index([metricId])
+  @@index([politicianId])
+}
+
+model SenatorialDistrict {
+  id         String       @id @default(uuid())
+  name       String
+  stateId    String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Politician Politician[]
+  State      State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@unique([name, stateId])
+}
+
+model Source {
+  id          String   @id @default(uuid())
+  name        String
+  url         String
+  type        String
+  reliability String   @default("UNVERIFIED")
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([type])
+}
+
+model State {
+  id                 String               @id @default(uuid())
+  name               String               @unique
+  code               String               @unique
+  region             String
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  LocalGovernment    LocalGovernment[]
+  Politician         Politician[]
+  SenatorialDistrict SenatorialDistrict[]
+}
+
+model Statement {
+  id           String     @id @default(uuid())
+  politicianId String
+  content      String
+  context      String?
+  date         DateTime
+  sourceUrl    String?
+  isVerified   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([politicianId])
+}
+
+model Tenure {
+  id            String     @id @default(uuid())
+  politicianId  String
+  officeId      String
+  startDate     DateTime
+  endDate       DateTime?
+  isCurrentRole Boolean    @default(false)
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  Office        Office     @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  Politician    Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+
+  @@index([isCurrentRole])
+  @@index([officeId])
+  @@index([politicianId])
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      Role       @default(USER)
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  AuditLog  AuditLog[]
+  Vote      Vote[]
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  pollId    String
+  userId    String?
+  option    String
+  state     String?
+  region    String?
+  createdAt DateTime @default(now())
+  Poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([pollId])
+  @@index([userId])
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ContactType {
+  GENERAL
+  ADVERTISING
+  PARTNERSHIP
+  MEDIA
+  SUPPORT
+  OTHER
 }
 
 enum OfficeType {
@@ -40,392 +405,9 @@ enum PartyAffiliation {
   OTHER
 }
 
-enum ContactType {
-  GENERAL
-  ADVERTISING
-  PARTNERSHIP
-  MEDIA
-  SUPPORT
-  OTHER
-}
-
-enum ContactStatus {
-  NEW
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-}
-
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String?
-  lastName  String?
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  votes      Vote[]
-  auditLogs  AuditLog[]
-}
-
-model State {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  code      String   @unique
-  region    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  senatorialDistricts SenatorialDistrict[]
-  lgas                LocalGovernment[]
-  politicians         Politician[]
-}
-
-model SenatorialDistrict {
-  id        String   @id @default(uuid())
-  name      String
-  stateId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  state       State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  politicians Politician[]
-
-  @@unique([name, stateId])
-}
-
-model LocalGovernment {
-  id        String   @id @default(uuid())
-  name      String
-  stateId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  state       State        @relation(fields: [stateId], references: [id], onDelete: Cascade)
-  politicians Politician[]
-
-  @@unique([name, stateId])
-}
-
-model Politician {
-  id                     String            @id @default(uuid())
-  firstName              String
-  lastName               String
-  middleName             String?
-  photoUrl               String?
-  dateOfBirth            DateTime?
-  partyAffiliation       PartyAffiliation
-  biography              String?
-  stateId                String?
-  senatorialDistrictId   String?
-  localGovernmentId      String?
-  constituency           String?
-  performanceScore       Float             @default(0)
-  integrityStatus        String            @default("UNVERIFIED")
-  isActive               Boolean           @default(true)
-  createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @updatedAt
-
-  state               State?               @relation(fields: [stateId], references: [id])
-  senatorialDistrict  SenatorialDistrict?  @relation(fields: [senatorialDistrictId], references: [id])
-  localGovernment     LocalGovernment?     @relation(fields: [localGovernmentId], references: [id])
-
-  tenures             Tenure[]
-  promises            Promise[]
-  bills               Bill[]
-  projects            Project[]
-  statements          Statement[]
-  controversies       Controversy[]
-  rankings            Ranking[]
-  scores              Score[]
-
-  @@index([stateId])
-  @@index([partyAffiliation])
-  @@index([performanceScore])
-}
-
-model Office {
-  id          String     @id @default(uuid())
-  name        String     @unique
-  type        OfficeType
-  level       String
-  description String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  tenures  Tenure[]
-  rankings Ranking[]
-  metrics  Metric[]
-}
-
-model Tenure {
-  id            String    @id @default(uuid())
-  politicianId  String
-  officeId      String
-  startDate     DateTime
-  endDate       DateTime?
-  isCurrentRole Boolean   @default(false)
-  notes         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-  office     Office     @relation(fields: [officeId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-  @@index([officeId])
-  @@index([isCurrentRole])
-}
-
-model Promise {
-  id           String   @id @default(uuid())
-  politicianId String
-  title        String
-  description  String
-  status       String   @default("PENDING")
-  fulfillment  Int      @default(0)
-  sourceUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-  @@index([status])
-}
-
-model Bill {
-  id           String   @id @default(uuid())
-  politicianId String
-  title        String
-  description  String?
-  status       String   @default("PROPOSED")
-  dateProposed DateTime
-  sourceUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-  @@index([status])
-}
-
-model Project {
-  id           String   @id @default(uuid())
-  politicianId String
-  title        String
-  description  String
-  location     String?
-  budget       Float?
-  status       String   @default("ONGOING")
-  startDate    DateTime?
-  endDate      DateTime?
-  sourceUrl    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-  @@index([status])
-}
-
-model Statement {
-  id           String   @id @default(uuid())
-  politicianId String
-  content      String
-  context      String?
-  date         DateTime
-  sourceUrl    String?
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-}
-
-model Controversy {
-  id           String   @id @default(uuid())
-  politicianId String
-  title        String
-  description  String
-  date         DateTime
-  sourceUrl    String
-  isVerified   Boolean  @default(false)
-  severity     String   @default("MEDIUM")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-
-  @@index([politicianId])
-  @@index([isVerified])
-}
-
-model Metric {
-  id          String  @id @default(uuid())
-  officeId    String
-  name        String
-  description String?
-  weight      Float   @default(1.0)
-  isActive    Boolean @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  office Office  @relation(fields: [officeId], references: [id], onDelete: Cascade)
-  scores Score[]
-
-  @@unique([officeId, name])
-}
-
-model Score {
-  id           String   @id @default(uuid())
-  politicianId String
-  metricId     String
-  value        Float
-  calculatedAt DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-  metric     Metric     @relation(fields: [metricId], references: [id], onDelete: Cascade)
-
-  @@unique([politicianId, metricId])
-  @@index([politicianId])
-  @@index([metricId])
-}
-
-model Ranking {
-  id           String   @id @default(uuid())
-  politicianId String
-  officeId     String
-  rank         Int
-  totalScore   Float
-  calculatedAt DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  politician Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
-  office     Office     @relation(fields: [officeId], references: [id], onDelete: Cascade)
-
-  @@unique([politicianId, officeId])
-  @@index([officeId, rank])
-  @@index([totalScore])
-}
-
-model Poll {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  question    String
-  options     Json
-  startDate   DateTime
-  endDate     DateTime
-  isActive    Boolean  @default(true)
-  category    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  votes Vote[]
-
-  @@index([isActive])
-  @@index([endDate])
-}
-
-model Vote {
-  id        String   @id @default(uuid())
-  pollId    String
-  userId    String?
-  option    String
-  state     String?
-  region    String?
-  createdAt DateTime @default(now())
-
-  poll Poll  @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([pollId])
-  @@index([userId])
-}
-
-model Blog {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  content     String
-  excerpt     String?
-  coverImage  String?
-  authorId    String
-  category    String?
-  tags        String[]
-  isPublished Boolean  @default(false)
-  publishedAt DateTime?
-  views       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([slug])
-  @@index([isPublished])
-  @@index([publishedAt])
-}
-
-model Source {
-  id          String   @id @default(uuid())
-  name        String
-  url         String
-  type        String
-  reliability String   @default("UNVERIFIED")
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([type])
-  @@index([isActive])
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String
-  action    String
-  entity    String
-  entityId  String
-  changes   Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([entity, entityId])
-  @@index([createdAt])
-}
-
-model Contact {
-  id            String        @id @default(uuid())
-  name          String
-  email         String
-  phone         String?
-  company       String?
-  type          ContactType   @default(GENERAL)
-  subject       String
-  message       String
-  status        ContactStatus @default(NEW)
-  notes         String?
-  assignedToId  String?
-  resolvedAt    DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([createdAt])
-  @@index([email])
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  SUPER_ADMIN
 }
