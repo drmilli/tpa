@@ -51,6 +51,49 @@ export class BlogController {
     }
   }
 
+  async getAllAdmin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { page = 1, limit = 20, category, status, search } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
+      const where: any = {};
+
+      if (category) where.category = category;
+      if (status === 'published') where.isPublished = true;
+      if (status === 'draft') where.isPublished = false;
+      if (search) {
+        where.OR = [
+          { title: { contains: search as string, mode: 'insensitive' } },
+          { excerpt: { contains: search as string, mode: 'insensitive' } },
+        ];
+      }
+
+      const [blogs, total] = await Promise.all([
+        prisma.blog.findMany({
+          where,
+          skip,
+          take: Number(limit),
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.blog.count({ where }),
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          blogs,
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            totalPages: Math.ceil(total / Number(limit)),
+          },
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getBySlug(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
