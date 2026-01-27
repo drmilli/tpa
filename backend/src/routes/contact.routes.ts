@@ -24,10 +24,10 @@ router.post(
 );
 
 // Admin routes
-router.get('/', authenticate, authorize('ADMIN', 'MODERATOR'), contactController.getAll);
-router.get('/stats', authenticate, authorize('ADMIN', 'MODERATOR'), contactController.getStats);
-router.get('/:id', authenticate, authorize('ADMIN', 'MODERATOR'), contactController.getById);
-router.put('/:id', authenticate, authorize('ADMIN', 'MODERATOR'), contactController.update);
-router.delete('/:id', authenticate, authorize('ADMIN'), contactController.delete);
+router.get('/', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'MODERATOR'), contactController.getAll);
+router.get('/stats', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'MODERATOR'), contactController.getStats);
+router.get('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'MODERATOR'), contactController.getById);
+router.put('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN', 'MODERATOR'), contactController.update);
+router.delete('/:id', authenticate, authorize('SUPER_ADMIN', 'ADMIN'), contactController.delete);
 
 export default router;
