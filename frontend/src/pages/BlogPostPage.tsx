@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   Calendar, Clock, User, Eye, Share2, Facebook, Twitter,
   ChevronLeft, Tag, BookOpen, ThumbsUp, ThumbsDown, MessageSquare,
-  Send, Reply, MoreHorizontal, Check, Copy, Linkedin, Mail
+  Send, Reply, MoreHorizontal, Copy, Linkedin, Mail
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 

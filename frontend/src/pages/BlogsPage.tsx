@@ -112,7 +112,6 @@ export default function BlogsPage() {
   });
 
   const featuredPost = posts[0];
-  const recentPosts = posts.slice(1, 4);
   const popularPosts = [...posts].sort((a, b) => b.views - a.views).slice(0, 5);
 
   const getCategoryColor = (category: string) => {

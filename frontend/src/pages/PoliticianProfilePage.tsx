@@ -4,7 +4,7 @@ import api from '@/lib/api';
 import {
   MapPin, Building, Calendar, TrendingUp, CheckCircle, Clock,
   XCircle, FileText, Briefcase, Award, ChevronLeft, Share2,
-  ThumbsUp, ThumbsDown, Users, Star, Loader2
+  ThumbsUp, ThumbsDown, Users, Loader2
 } from 'lucide-react';
 
 export default function PoliticianProfilePage() {

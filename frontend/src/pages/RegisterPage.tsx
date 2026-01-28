@@ -276,32 +276,32 @@ export default function RegisterPage() {
 
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2 text-xs">
-                      {passwordStrength.checks.length ? (
+                      {passwordStrength.checks?.length ? (
                         <Check className="w-3 h-3 text-green-500" />
                       ) : (
                         <X className="w-3 h-3 text-gray-400" />
                       )}
-                      <span className={passwordStrength.checks.length ? 'text-green-600' : 'text-gray-500'}>
+                      <span className={passwordStrength.checks?.length ? 'text-green-600' : 'text-gray-500'}>
                         At least 8 characters
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-xs">
-                      {passwordStrength.checks.uppercase && passwordStrength.checks.lowercase ? (
+                      {passwordStrength.checks?.uppercase && passwordStrength.checks?.lowercase ? (
                         <Check className="w-3 h-3 text-green-500" />
                       ) : (
                         <X className="w-3 h-3 text-gray-400" />
                       )}
-                      <span className={passwordStrength.checks.uppercase && passwordStrength.checks.lowercase ? 'text-green-600' : 'text-gray-500'}>
+                      <span className={passwordStrength.checks?.uppercase && passwordStrength.checks?.lowercase ? 'text-green-600' : 'text-gray-500'}>
                         Upper & lowercase letters
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-xs">
-                      {passwordStrength.checks.number ? (
+                      {passwordStrength.checks?.number ? (
                         <Check className="w-3 h-3 text-green-500" />
                       ) : (
                         <X className="w-3 h-3 text-gray-400" />
                       )}
-                      <span className={passwordStrength.checks.number ? 'text-green-600' : 'text-gray-500'}>
+                      <span className={passwordStrength.checks?.number ? 'text-green-600' : 'text-gray-500'}>
                         At least one number
                       </span>
                     </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  TrendingUp, TrendingDown, Search, Filter, Trophy, Medal, Award,
-  ArrowUp, ArrowDown, Star, Users, ChevronRight, Loader2
+  TrendingUp, Search, Filter, Trophy, Medal, Award,
+  Star, Users, ChevronRight, Loader2
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
