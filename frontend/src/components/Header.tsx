@@ -109,20 +109,31 @@ export default function Header() {
               </Link>
               {isAuthenticated ? (
                 <button
-                  onClick={handleLogout}
-                  className="text-left text-gray-700 hover:text-primary-600"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:text-primary-600 rounded-lg"
                 >
                   Logout
                 </button>
               ) : (
-                <>
-                  <Link to="/login" className="text-gray-700 hover:text-primary-600">
+                <div className="flex flex-col space-y-2 px-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full text-center px-4 py-2 text-primary-600 hover:text-primary-700 rounded-lg border"
+                  >
                     Login
                   </Link>
-                  <Link to="/register" className="text-gray-700 hover:text-primary-600">
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  >
                     Register
                   </Link>
-                </>
+                </div>
               )}
             </nav>
           </div>
