@@ -393,16 +393,27 @@ enum OfficeType {
   COUNCILLOR
 }
 
+// All 18 INEC-registered political parties for 2023 elections
 enum PartyAffiliation {
-  APC
-  PDP
-  LP
-  NNPP
-  APGA
-  SDP
-  ADC
-  YPP
-  OTHER
+  A       // Accord
+  AA      // Action Alliance
+  AAC     // African Action Congress
+  ADC     // African Democratic Congress
+  ADP     // Action Democratic Party
+  APC     // All Progressives Congress
+  APGA    // All Progressives Grand Alliance
+  APM     // Allied Peoples Movement
+  APP     // Action Peoples Party
+  BP      // Boot Party
+  LP      // Labour Party
+  NNPP    // New Nigeria Peoples Party
+  NRM     // National Rescue Movement
+  PDP     // Peoples Democratic Party
+  PRP     // Peoples Redemption Party
+  SDP     // Social Democratic Party
+  YPP     // Young Progressives Party
+  ZLP     // Zenith Labour Party
+  OTHER   // Independent or other parties
 }
 
 enum Role {

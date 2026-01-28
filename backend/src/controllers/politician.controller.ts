@@ -23,7 +23,15 @@ export class PoliticianController {
       const skip = (Number(page) - 1) * Number(limit);
       const where: any = { isActive: true };
 
-      if (state) where.stateId = state as string;
+      // Handle state filter by name (case-insensitive)
+      if (state) {
+        const stateRecord = await prisma.state.findFirst({
+          where: { name: { contains: state as string, mode: 'insensitive' } },
+        });
+        if (stateRecord) {
+          where.stateId = stateRecord.id;
+        }
+      }
       if (party) where.partyAffiliation = party as string;
       if (minScore || maxScore) {
         where.performanceScore = {};

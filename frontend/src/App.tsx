@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
@@ -16,7 +17,7 @@ import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -36,7 +37,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
-    </>
+    </HelmetProvider>
   );
 }
 

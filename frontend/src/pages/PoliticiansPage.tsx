@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
+import SEO from '@/components/SEO';
 import {
   Search, Users, MapPin, Building, TrendingUp, ChevronRight,
   Filter, Grid, List, Loader2
@@ -26,9 +27,34 @@ export default function PoliticiansPage() {
     },
   });
 
-  const parties = ['APC', 'PDP', 'LP', 'APGA', 'NNPP'];
+  // All 18 INEC-registered political parties
+  const parties = [
+    { code: 'APC', name: 'All Progressives Congress' },
+    { code: 'PDP', name: 'Peoples Democratic Party' },
+    { code: 'LP', name: 'Labour Party' },
+    { code: 'NNPP', name: 'New Nigeria Peoples Party' },
+    { code: 'APGA', name: 'All Progressives Grand Alliance' },
+    { code: 'ADC', name: 'African Democratic Congress' },
+    { code: 'SDP', name: 'Social Democratic Party' },
+    { code: 'YPP', name: 'Young Progressives Party' },
+    { code: 'PRP', name: 'Peoples Redemption Party' },
+    { code: 'AAC', name: 'African Action Congress' },
+    { code: 'AA', name: 'Action Alliance' },
+    { code: 'ADP', name: 'Action Democratic Party' },
+    { code: 'APM', name: 'Allied Peoples Movement' },
+    { code: 'APP', name: 'Action Peoples Party' },
+    { code: 'A', name: 'Accord' },
+    { code: 'BP', name: 'Boot Party' },
+    { code: 'NRM', name: 'National Rescue Movement' },
+    { code: 'ZLP', name: 'Zenith Labour Party' },
+  ];
+  // All 36 Nigerian states + FCT
   const states = [
-    'Lagos', 'Abuja', 'Kano', 'Rivers', 'Oyo', 'Kaduna', 'Anambra', 'Edo', 'Enugu', 'Ogun'
+    'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+    'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT Abuja', 'Gombe',
+    'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos',
+    'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto',
+    'Taraba', 'Yobe', 'Zamfara'
   ];
 
   const getPartyColor = (party: string) => {
@@ -38,6 +64,14 @@ export default function PoliticiansPage() {
       case 'LP': return 'bg-green-100 text-green-700 border-green-200';
       case 'APGA': return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'NNPP': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'ADC': return 'bg-teal-100 text-teal-700 border-teal-200';
+      case 'SDP': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'YPP': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+      case 'PRP': return 'bg-rose-100 text-rose-700 border-rose-200';
+      case 'AAC': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'AA': return 'bg-lime-100 text-lime-700 border-lime-200';
+      case 'ADP': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'ZLP': return 'bg-sky-100 text-sky-700 border-sky-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -56,6 +90,12 @@ export default function PoliticiansPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO
+        title="Nigerian Politicians"
+        description="Explore profiles of Nigerian politicians, track their performance, and hold your representatives accountable. Find detailed information about governors, senators, and legislators."
+        keywords="Nigerian politicians, governors, senators, house of representatives, state assembly, INEC, political profiles Nigeria"
+        url="https://thepeoplesaffairs.com/politicians"
+      />
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-16">
         <div className="container mx-auto px-4">
@@ -80,7 +120,7 @@ export default function PoliticiansPage() {
                 <Users className="w-5 h-5 text-primary-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{data?.total || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{data?.pagination?.total || 0}</p>
                 <p className="text-sm text-gray-500">Politicians</p>
               </div>
             </div>
@@ -154,7 +194,7 @@ export default function PoliticiansPage() {
               >
                 <option value="">All Parties</option>
                 {parties.map(party => (
-                  <option key={party} value={party}>{party}</option>
+                  <option key={party.code} value={party.code}>{party.code} - {party.name}</option>
                 ))}
               </select>
               <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
@@ -208,10 +248,10 @@ export default function PoliticiansPage() {
                   <h3 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-primary-600 transition">
                     {politician.firstName} {politician.lastName}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-3">{politician.currentOffice?.name || 'Politician'}</p>
+                  <p className="text-sm text-gray-500 mb-3">{politician.Tenure?.[0]?.Office?.name || 'Politician'}</p>
                   <div className="flex items-center text-sm text-gray-400 mb-4">
                     <MapPin className="w-4 h-4 mr-1" />
-                    <span>{politician.state?.name || 'Nigeria'}</span>
+                    <span>{politician.State?.name || 'Nigeria'}</span>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div>
@@ -247,11 +287,11 @@ export default function PoliticiansPage() {
                       {politician.firstName} {politician.lastName}
                     </h3>
                     <div className="flex items-center space-x-3 text-sm text-gray-500">
-                      <span>{politician.currentOffice?.name || 'Politician'}</span>
+                      <span>{politician.Tenure?.[0]?.Office?.name || 'Politician'}</span>
                       <span>•</span>
                       <span className="flex items-center">
                         <MapPin className="w-3 h-3 mr-1" />
-                        {politician.state?.name || 'Nigeria'}
+                        {politician.State?.name || 'Nigeria'}
                       </span>
                     </div>
                   </div>
@@ -274,7 +314,7 @@ export default function PoliticiansPage() {
         )}
 
         {/* Pagination */}
-        {data?.total > filters.limit && (
+        {data?.pagination?.total > filters.limit && (
           <div className="flex items-center justify-center mt-8 space-x-2">
             <button
               onClick={() => setFilters({ ...filters, page: Math.max(1, filters.page - 1) })}
@@ -288,7 +328,7 @@ export default function PoliticiansPage() {
             </span>
             <button
               onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
-              disabled={filters.page * filters.limit >= data?.total}
+              disabled={filters.page * filters.limit >= data?.pagination?.total}
               className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
