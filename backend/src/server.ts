@@ -55,7 +55,8 @@ const startServer = async () => {
     // Connect to Elasticsearch (optional - continues if unavailable)
     await connectElasticsearch();
 
-    app.listen(PORT, () => {
+    const HOST = '0.0.0.0';
+    app.listen(Number(PORT), HOST, () => {
       logger.info(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
       logger.info(`📡 API available at http://localhost:${PORT}/api/${API_VERSION}`);
     });
