@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Mail, Phone, Building, Calendar, Filter, X, CheckCircle } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 
 interface Contact {
   id: string;
