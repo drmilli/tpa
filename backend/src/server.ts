@@ -10,6 +10,7 @@ import apiRoutes from './routes';
 import { logger } from './utils/logger';
 import { connectRedis } from './config/redis';
 import { connectElasticsearch } from './config/elasticsearch';
+import { schedulerService } from './services/scheduler.service';
 
 dotenv.config();
 
@@ -59,6 +60,13 @@ const startServer = async () => {
     app.listen(Number(PORT), HOST, () => {
       logger.info(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
       logger.info(`📡 API available at http://localhost:${PORT}/api/${API_VERSION}`);
+
+      // Start scheduler in production
+      if (process.env.NODE_ENV === 'production' || process.env.ENABLE_SCHEDULER === 'true') {
+        schedulerService.start().catch(err => {
+          logger.error('Failed to start scheduler:', err);
+        });
+      }
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

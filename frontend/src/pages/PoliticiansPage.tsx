@@ -14,6 +14,7 @@ export default function PoliticiansPage() {
     limit: 20,
     state: '',
     party: '',
+    positionType: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -196,6 +197,15 @@ export default function PoliticiansPage() {
                 {parties.map(party => (
                   <option key={party.code} value={party.code}>{party.code} - {party.name}</option>
                 ))}
+              </select>
+              <select
+                className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                value={filters.positionType}
+                onChange={(e) => setFilters({ ...filters, positionType: e.target.value })}
+              >
+                <option value="">All Positions</option>
+                <option value="elected">Elected Officials</option>
+                <option value="appointed">Appointed Officials</option>
               </select>
               <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
                 <button

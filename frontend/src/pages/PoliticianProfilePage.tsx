@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import AnalysisCard from '@/components/AnalysisCard';
 import {
   MapPin, Building, Calendar, TrendingUp, CheckCircle, Clock,
   XCircle, FileText, Briefcase, Award, ChevronLeft, Share2,
@@ -23,6 +24,13 @@ export default function PoliticianProfilePage() {
       case 'APC': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'PDP': return 'bg-red-100 text-red-700 border-red-200';
       case 'LP': return 'bg-green-100 text-green-700 border-green-200';
+      case 'APGA': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'NNPP': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'ADC': return 'bg-teal-100 text-teal-700 border-teal-200';
+      case 'SDP': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'YPP': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+      case 'PRP': return 'bg-rose-100 text-rose-700 border-rose-200';
+      case 'AAC': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -122,16 +130,16 @@ export default function PoliticianProfilePage() {
                 </span>
               </div>
               <p className="text-xl text-primary-100 mb-4">
-                {politician.currentOffice?.name || 'Politician'}
+                {politician.Tenure?.[0]?.Office?.name || 'Politician'}
               </p>
               <div className="flex flex-wrap items-center gap-4 text-primary-200">
                 <div className="flex items-center">
                   <MapPin className="w-4 h-4 mr-2" />
-                  <span>{politician.state?.name || 'Nigeria'}</span>
+                  <span>{politician.State?.name || 'Nigeria'}</span>
                 </div>
                 <div className="flex items-center">
                   <Building className="w-4 h-4 mr-2" />
-                  <span>{politician.lga?.name || 'Federal'}</span>
+                  <span>{politician.LocalGovernment?.name || 'Federal'}</span>
                 </div>
                 {politician.dateOfBirth && (
                   <div className="flex items-center">
@@ -301,6 +309,9 @@ export default function PoliticianProfilePage() {
                 )}
               </div>
             </div>
+
+            {/* AI Analysis Section */}
+            <AnalysisCard politicianId={id!} />
           </div>
 
           {/* Sidebar */}
@@ -333,7 +344,7 @@ export default function PoliticianProfilePage() {
                 <div>
                   <p className="text-sm text-yellow-700">Current Ranking</p>
                   <p className="text-2xl font-bold text-yellow-800">
-                    #{rankings[0]?.position || 'N/A'}
+                    #{rankings[0]?.rank || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -359,10 +370,10 @@ export default function PoliticianProfilePage() {
             <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-4">Similar Politicians</h3>
               <p className="text-sm text-gray-500">
-                Explore other politicians from {politician.state?.name || 'this region'}.
+                Explore other politicians from {politician.State?.name || 'this region'}.
               </p>
               <Link
-                to={`/politicians?state=${politician.state?.name?.toLowerCase()}`}
+                to={`/politicians?state=${politician.State?.name?.toLowerCase()}`}
                 className="inline-block mt-3 text-primary-600 hover:text-primary-700 text-sm font-medium"
               >
                 View more from this state

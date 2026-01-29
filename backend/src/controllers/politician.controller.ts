@@ -14,6 +14,7 @@ export class PoliticianController {
         state,
         party,
         office: _office,
+        positionType,
         minScore,
         maxScore,
         sortBy = 'performanceScore',
@@ -22,6 +23,23 @@ export class PoliticianController {
 
       const skip = (Number(page) - 1) * Number(limit);
       const where: any = { isActive: true };
+
+      // Define elected and appointed office types
+      const electedOffices = ['PRESIDENT', 'VICE_PRESIDENT', 'GOVERNOR', 'DEPUTY_GOVERNOR', 'SENATOR', 'HOUSE_OF_REPS', 'STATE_ASSEMBLY', 'LG_CHAIRMAN', 'COUNCILLOR'];
+      const appointedOffices = ['MINISTER', 'SPECIAL_ADVISER', 'AMBASSADOR'];
+
+      // Handle position type filter (elected vs appointed)
+      if (positionType === 'elected' || positionType === 'appointed') {
+        const officeTypes = positionType === 'elected' ? electedOffices : appointedOffices;
+        where.Tenure = {
+          some: {
+            isCurrentRole: true,
+            Office: {
+              type: { in: officeTypes }
+            }
+          }
+        };
+      }
 
       // Handle state filter by name (case-insensitive)
       if (state) {

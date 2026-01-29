@@ -7,6 +7,7 @@ import pollRoutes from './poll.routes';
 import blogRoutes from './blog.routes';
 import locationRoutes from './location.routes';
 import contactRoutes from './contact.routes';
+import analysisRoutes from './analysis.routes';
 import { apiLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
@@ -21,5 +22,6 @@ router.use('/polls', pollRoutes);
 router.use('/blogs', blogRoutes);
 router.use('/locations', locationRoutes);
 router.use('/contact', contactRoutes);
+router.use('/analysis', analysisRoutes);
 
 export default router;
