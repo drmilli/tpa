@@ -45,7 +45,7 @@ export class AnalysisController {
   /**
    * Trigger full score update for all politicians (admin only)
    */
-  async updateAllScores(req: Request, res: Response, next: NextFunction) {
+  async updateAllScores(_req: Request, res: Response, next: NextFunction) {
     try {
       // Run in background
       scoringService.updateAllScores().catch(err => {
@@ -64,7 +64,7 @@ export class AnalysisController {
   /**
    * Get scheduler status
    */
-  async getSchedulerStatus(req: Request, res: Response, next: NextFunction) {
+  async getSchedulerStatus(_req: Request, res: Response, next: NextFunction) {
     try {
       const status = schedulerService.getJobStatus();
 
@@ -162,10 +162,11 @@ export class AnalysisController {
       const { ids } = req.body; // Array of politician IDs
 
       if (!ids || !Array.isArray(ids) || ids.length < 2) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Please provide at least 2 politician IDs to compare',
         });
+        return;
       }
 
       const comparisons = await Promise.all(

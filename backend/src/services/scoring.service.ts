@@ -22,14 +22,6 @@ const SCORING_WEIGHTS = {
   controversyImpact: 0.10,
 };
 
-interface SentimentResult {
-  score: number; // -1 to 1
-  positive: number;
-  negative: number;
-  neutral: number;
-  sampleSize: number;
-}
-
 interface NewsAnalysis {
   totalMentions: number;
   sentimentScore: number;
@@ -131,8 +123,6 @@ export class ScoringService {
     if (!bills || bills.length === 0) return 50;
 
     const passed = bills.filter(b => b.status === 'PASSED').length;
-    const proposed = bills.filter(b => b.status === 'PROPOSED').length;
-    const rejected = bills.filter(b => b.status === 'REJECTED').length;
     const total = bills.length;
 
     // Base score from quantity (max 50 points for 10+ bills)
