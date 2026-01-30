@@ -82,7 +82,7 @@ class WikipediaService {
         });
 
         const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-        const data: WikipediaSearchResponse = await response.json();
+        const data = await response.json() as WikipediaSearchResponse;
 
         if (data.query?.search && data.query.search.length > 0) {
           // Find the most relevant result by checking if the title contains the person's name
@@ -124,7 +124,7 @@ class WikipediaService {
       });
 
       const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-      const data: WikipediaPageResponse = await response.json();
+      const data = await response.json() as WikipediaPageResponse;
 
       const pages = data.query?.pages;
       if (!pages) return null;
@@ -158,7 +158,7 @@ class WikipediaService {
       });
 
       const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-      const data: WikipediaPageResponse = await response.json();
+      const data = await response.json() as WikipediaPageResponse;
 
       const pages = data.query?.pages;
       if (!pages) return null;
