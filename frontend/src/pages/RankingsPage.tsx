@@ -31,12 +31,6 @@ interface RankedPolitician {
   };
 }
 
-interface Office {
-  id: string;
-  name: string;
-  type: string;
-}
-
 interface State {
   id: string;
   name: string;
@@ -58,7 +52,6 @@ const categories = [
 
 export default function RankingsPage() {
   const [rankings, setRankings] = useState<RankedPolitician[]>([]);
-  const [offices, setOffices] = useState<Office[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,13 +65,11 @@ export default function RankingsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [rankingsRes, officesRes, statesRes] = await Promise.all([
+      const [rankingsRes, statesRes] = await Promise.all([
         api.get('/rankings'),
-        api.get('/offices'),
         api.get('/locations/states'),
       ]);
       setRankings(rankingsRes.data.data || []);
-      setOffices(officesRes.data.data?.offices || []);
       setStates(statesRes.data.data?.states || []);
     } catch (error: any) {
       toast.error('Failed to load rankings');
