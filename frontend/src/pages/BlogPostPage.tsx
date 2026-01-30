@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 import {
-  Calendar, Clock, User, Eye, Share2, Facebook, Twitter,
+  Calendar, User, Eye, Share2, Facebook, Twitter,
   ChevronLeft, Tag, BookOpen, ThumbsUp, ThumbsDown, MessageSquare,
-  Send, Reply, MoreHorizontal, Copy, Linkedin, Mail
+  Send, Reply, MoreHorizontal, Copy, Linkedin, Mail, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -20,136 +22,51 @@ interface Comment {
   replies?: Comment[];
 }
 
+interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  author: {
+    firstName: string;
+    lastName: string;
+  };
+  createdAt: string;
+  readTime?: number;
+  views: number;
+  featuredImage?: string;
+  tags: string[];
+}
+
 export default function BlogPostPage() {
   const { slug } = useParams();
+
+  const { data: post, isLoading, error } = useQuery({
+    queryKey: ['blog', slug],
+    queryFn: async () => {
+      const response = await api.get(`/blogs/${slug}`);
+      return response.data.data;
+    },
+    enabled: !!slug,
+  });
 
   // State management
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
-  const [likeCount, setLikeCount] = useState(342);
-  const [dislikeCount, setDislikeCount] = useState(12);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: '1',
-      author: { name: 'Chukwuemeka Obi' },
-      content: 'This is a very informative article. Every Nigerian should understand how our electoral process works. Thank you for breaking it down so clearly!',
-      createdAt: '2024-01-16T10:30:00',
-      likes: 24,
-      dislikes: 2,
-      replies: [
-        {
-          id: '1-1',
-          author: { name: 'Amina Yusuf' },
-          content: 'I completely agree! Shared this with my family members who are first-time voters.',
-          createdAt: '2024-01-16T11:45:00',
-          likes: 8,
-          dislikes: 0,
-        }
-      ]
-    },
-    {
-      id: '2',
-      author: { name: 'Oluwaseun Adebayo' },
-      content: 'The section about BVAS is particularly helpful. Many people still don\'t understand how the accreditation system works.',
-      createdAt: '2024-01-17T09:15:00',
-      likes: 15,
-      dislikes: 1,
-    },
-    {
-      id: '3',
-      author: { name: 'Fatima Bello' },
-      content: 'Great article! Would love to see more content about how to verify election results through the IReV portal.',
-      createdAt: '2024-01-18T14:20:00',
-      likes: 31,
-      dislikes: 0,
-    },
-  ]);
+  const [comments, setComments] = useState<Comment[]>([]);
 
-  // Mock data - will be replaced with API data
-  const post = {
-    id: slug || '1',
-    title: 'Understanding Nigeria\'s Electoral Process: A Complete Guide',
-    excerpt: 'A comprehensive guide to how elections work in Nigeria, from voter registration to the final vote count.',
-    content: `
-      <p>Nigeria's electoral process is a cornerstone of its democracy, enabling citizens to choose their leaders at various levels of government. This guide provides a comprehensive overview of how elections work in Africa's most populous nation.</p>
-
-      <h2>The Electoral Body: INEC</h2>
-      <p>The Independent National Electoral Commission (INEC) is the body responsible for organizing and conducting elections in Nigeria. Established by the 1999 Constitution, INEC is charged with the responsibility of organizing elections into the offices of the President, Vice President, Governor, Deputy Governor, Senate, House of Representatives, and State House of Assembly.</p>
-
-      <h2>Voter Registration</h2>
-      <p>To participate in elections, Nigerian citizens must register as voters. The process involves:</p>
-      <ul>
-        <li>Being a Nigerian citizen aged 18 years or above</li>
-        <li>Visiting a designated INEC registration center</li>
-        <li>Providing biometric data (fingerprints and photograph)</li>
-        <li>Collecting a Permanent Voter Card (PVC)</li>
-      </ul>
-
-      <h2>Types of Elections</h2>
-      <p>Nigeria conducts several types of elections:</p>
-      <ul>
-        <li><strong>Presidential Elections:</strong> Held every four years to elect the President and Vice President</li>
-        <li><strong>Gubernatorial Elections:</strong> For electing State Governors and Deputy Governors</li>
-        <li><strong>National Assembly Elections:</strong> For Senate and House of Representatives</li>
-        <li><strong>State Assembly Elections:</strong> For State Houses of Assembly</li>
-        <li><strong>Local Government Elections:</strong> For Local Government Chairmen and Councilors</li>
-      </ul>
-
-      <h2>The Voting Process</h2>
-      <p>On election day, the process typically follows these steps:</p>
-      <ol>
-        <li>Voter arrives at the polling unit with their PVC</li>
-        <li>Accreditation using the Bimodal Voter Accreditation System (BVAS)</li>
-        <li>Collection of ballot paper</li>
-        <li>Marking the ballot paper in a private voting cubicle</li>
-        <li>Depositing the marked ballot in the ballot box</li>
-        <li>Fingerprinting with indelible ink to prevent multiple voting</li>
-      </ol>
-
-      <h2>Counting and Results</h2>
-      <p>Vote counting begins immediately after the close of polls at each polling unit. Results are announced publicly and uploaded to the INEC Result Viewing Portal (IReV) in real-time for transparency.</p>
-
-      <h2>Your Vote Matters</h2>
-      <p>Every vote counts in shaping Nigeria's future. Active participation in the electoral process is crucial for a vibrant democracy. As citizens, it's our responsibility to not only vote but to also hold our elected officials accountable.</p>
-    `,
-    category: 'Education',
-    author: {
-      name: 'Editorial Team',
-      bio: 'The TPA Editorial Team is dedicated to providing accurate and insightful political content.',
-    },
-    publishedAt: '2024-01-15',
-    readTime: 8,
-    views: 2500,
-    tags: ['Elections', 'Democracy', 'Civic Education', 'INEC', 'Voting'],
+  const getAuthorName = (author: BlogPost['author']) => {
+    if (!author) return 'Editorial Team';
+    return `${author.firstName || ''} ${author.lastName || ''}`.trim() || 'Editorial Team';
   };
-
-  const relatedPosts = [
-    {
-      id: '2',
-      title: 'Top 10 Performing Governors in 2024',
-      category: 'Rankings',
-      publishedAt: '2024-01-10',
-      readTime: 12,
-    },
-    {
-      id: '3',
-      title: 'The Role of Youth in Nigerian Politics',
-      category: 'Opinion',
-      publishedAt: '2024-01-05',
-      readTime: 6,
-    },
-    {
-      id: '6',
-      title: 'Local Government Elections: Everything You Need to Know',
-      category: 'News',
-      publishedAt: '2023-12-20',
-      readTime: 7,
-    },
-  ];
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -193,7 +110,7 @@ export default function BlogPostPage() {
 
   // Share handlers
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareTitle = post.title;
+  const shareTitle = post?.title || '';
 
   const handleShare = (platform: string) => {
     let url = '';
@@ -379,6 +296,36 @@ export default function BlogPostPage() {
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading article...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Article Not Found</h2>
+          <p className="text-gray-600 mb-6">The article you're looking for doesn't exist or has been removed.</p>
+          <Link
+            to="/blogs"
+            className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Back to Blog
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero/Header */}
@@ -397,7 +344,7 @@ export default function BlogPostPage() {
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(post.category)}`}>
                 {post.category}
               </span>
-              <span className="text-primary-200">{post.readTime} min read</span>
+              <span className="text-primary-200">{post.readTime || 5} min read</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{post.title}</h1>
             <p className="text-lg text-primary-100 mb-6">{post.excerpt}</p>
@@ -405,15 +352,15 @@ export default function BlogPostPage() {
             <div className="flex flex-wrap items-center gap-4 text-sm text-primary-200">
               <div className="flex items-center">
                 <User className="w-4 h-4 mr-2" />
-                <span>{post.author.name}</span>
+                <span>{getAuthorName(post.author)}</span>
               </div>
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
-                <span>{new Date(post.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span>{new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               <div className="flex items-center">
                 <Eye className="w-4 h-4 mr-2" />
-                <span>{post.views.toLocaleString()} views</span>
+                <span>{(post.views || 0).toLocaleString()} views</span>
               </div>
             </div>
           </div>
@@ -425,8 +372,12 @@ export default function BlogPostPage() {
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Featured Image */}
-            <div className="bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl h-64 md:h-96 flex items-center justify-center mb-8 -mt-16 shadow-xl">
-              <BookOpen className="w-24 h-24 text-white/30" />
+            <div className="bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl h-64 md:h-96 flex items-center justify-center mb-8 -mt-16 shadow-xl overflow-hidden">
+              {post.featuredImage ? (
+                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
+              ) : (
+                <BookOpen className="w-24 h-24 text-white/30" />
+              )}
             </div>
 
             {/* Article Content */}
@@ -437,19 +388,21 @@ export default function BlogPostPage() {
               />
 
               {/* Tags */}
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="flex items-center flex-wrap gap-2">
-                  <Tag className="w-4 h-4 text-gray-400" />
-                  {post.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full hover:bg-primary-100 hover:text-primary-700 cursor-pointer transition"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+              {post.tags && post.tags.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="flex items-center flex-wrap gap-2">
+                    <Tag className="w-4 h-4 text-gray-400" />
+                    {post.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full hover:bg-primary-100 hover:text-primary-700 cursor-pointer transition"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Engagement */}
               <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
@@ -546,11 +499,11 @@ export default function BlogPostPage() {
             <div className="bg-white rounded-2xl border border-gray-100 p-6 mt-6 shadow-sm">
               <div className="flex items-start space-x-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-                  {post.author.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  {getAuthorName(post.author).split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{post.author.name}</h3>
-                  <p className="text-gray-600 text-sm mt-1">{post.author.bio}</p>
+                  <h3 className="font-bold text-gray-900">{getAuthorName(post.author)}</h3>
+                  <p className="text-gray-600 text-sm mt-1">Contributing writer at The Peoples Affairs.</p>
                   <Link to="/about" className="text-primary-600 hover:text-primary-700 text-sm font-medium mt-2 inline-block">
                     View all articles
                   </Link>
@@ -609,58 +562,8 @@ export default function BlogPostPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Table of Contents */}
-            <div className="bg-white rounded-xl border border-gray-100 p-5 sticky top-4">
-              <h3 className="font-bold text-gray-900 mb-4">In This Article</h3>
-              <nav className="space-y-2">
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  The Electoral Body: INEC
-                </a>
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  Voter Registration
-                </a>
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  Types of Elections
-                </a>
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  The Voting Process
-                </a>
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  Counting and Results
-                </a>
-                <a href="#" className="block text-sm text-gray-600 hover:text-primary-600 transition py-1">
-                  Your Vote Matters
-                </a>
-              </nav>
-            </div>
-
-            {/* Related Posts */}
-            <div className="bg-white rounded-xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-4">Related Articles</h3>
-              <div className="space-y-4">
-                {relatedPosts.map((relatedPost) => (
-                  <Link
-                    key={relatedPost.id}
-                    to={`/blogs/${relatedPost.id}`}
-                    className="block group"
-                  >
-                    <span className={`text-xs px-2 py-0.5 rounded ${getCategoryColor(relatedPost.category)}`}>
-                      {relatedPost.category}
-                    </span>
-                    <h4 className="text-sm font-medium text-gray-900 mt-2 group-hover:text-primary-600 transition line-clamp-2">
-                      {relatedPost.title}
-                    </h4>
-                    <div className="flex items-center text-xs text-gray-400 mt-1">
-                      <Clock className="w-3 h-3 mr-1" />
-                      <span>{relatedPost.readTime} min read</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
             {/* CTA */}
-            <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-5 text-white">
+            <div className="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-5 text-white sticky top-4">
               <h3 className="font-bold mb-2">Stay Informed</h3>
               <p className="text-sm text-primary-100 mb-4">
                 Get the latest political updates delivered to your inbox.
@@ -673,6 +576,17 @@ export default function BlogPostPage() {
               <button className="w-full px-4 py-2 bg-white text-primary-700 rounded-lg font-medium hover:bg-gray-100 transition">
                 Subscribe
               </button>
+            </div>
+
+            {/* Back to Blog */}
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <Link
+                to="/blogs"
+                className="flex items-center text-primary-600 hover:text-primary-700 font-medium"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Browse All Articles
+              </Link>
             </div>
           </div>
         </div>
