@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
 import {
   Search, Filter, CheckCircle, XCircle, AlertCircle, HelpCircle,
   Calendar, ChevronRight, Share2, ExternalLink,
@@ -202,71 +204,24 @@ export default function FactCheckPage() {
     setIsAnalyzing(true);
     setAiResult(null);
 
-    // Simulate AI analysis (replace with actual API call)
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      const response = await api.post('/factcheck/analyze', { claim: aiInput });
+      const data = response.data.data;
 
-    // Mock AI response based on input
-    const mockResults: AIFactCheckResult[] = [
-      {
-        verdict: 'mostly-false',
-        confidence: 78,
-        summary: 'Based on available data and official sources, this claim appears to be largely inaccurate. While there may be some elements of truth, the core assertion does not align with verified information.',
-        keyPoints: [
-          'Official government statistics contradict the main claim',
-          'The timeframe mentioned does not match recorded events',
-          'Similar claims have been debunked by independent fact-checkers',
-          'Some contextual elements may be accurate but are misleading'
-        ],
-        sources: [
-          'National Bureau of Statistics (NBS)',
-          'Central Bank of Nigeria (CBN)',
-          'Independent National Electoral Commission (INEC)',
-          'World Bank Data Portal'
-        ],
-        disclaimer: 'This AI-powered analysis is for informational purposes only. For official fact-checks, please refer to our verified reports or consult primary sources.'
-      },
-      {
-        verdict: 'half-true',
-        confidence: 65,
-        summary: 'This claim contains a mixture of accurate and inaccurate information. While some aspects are verifiable, important context is missing or misrepresented.',
-        keyPoints: [
-          'The base statistics cited are accurate',
-          'However, the interpretation is misleading',
-          'Key context about timing and scope is omitted',
-          'Comparison methodology appears flawed'
-        ],
-        sources: [
-          'Federal Ministry of Finance',
-          'Nigerian National Petroleum Corporation (NNPC)',
-          'Budget Office of the Federation',
-          'Reuters Fact Check'
-        ],
-        disclaimer: 'This AI-powered analysis is for informational purposes only. For official fact-checks, please refer to our verified reports or consult primary sources.'
-      },
-      {
-        verdict: 'true',
-        confidence: 85,
-        summary: 'Based on our analysis of available data, this claim appears to be accurate and supported by multiple credible sources.',
-        keyPoints: [
-          'Multiple official sources confirm this information',
-          'Data is consistent across different reporting periods',
-          'Independent verification supports the claim',
-          'Context and framing are appropriate'
-        ],
-        sources: [
-          'National Bureau of Statistics (NBS)',
-          'World Health Organization (WHO)',
-          'Federal Ministry of Health',
-          'Academic Research Publications'
-        ],
-        disclaimer: 'This AI-powered analysis is for informational purposes only. For official fact-checks, please refer to our verified reports or consult primary sources.'
-      }
-    ];
-
-    // Randomly select a result for demo purposes
-    const randomResult = mockResults[Math.floor(Math.random() * mockResults.length)];
-    setAiResult(randomResult);
-    setIsAnalyzing(false);
+      setAiResult({
+        verdict: data.verdict,
+        confidence: data.confidence,
+        summary: data.summary,
+        keyPoints: data.keyPoints,
+        sources: data.sources,
+        disclaimer: data.disclaimer,
+      });
+    } catch (error: any) {
+      console.error('Fact check error:', error);
+      toast.error(error.response?.data?.error || 'Failed to analyze claim. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const resetAIChecker = () => {

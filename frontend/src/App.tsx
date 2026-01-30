@@ -16,6 +16,7 @@ import RegisterPage from './pages/RegisterPage';
 import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import MethodologyPage from './pages/MethodologyPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="about" element={<AboutPage />} />
             <Route path="terms" element={<TermsPage />} />
             <Route path="privacy" element={<PrivacyPage />} />
+            <Route path="methodology" element={<MethodologyPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

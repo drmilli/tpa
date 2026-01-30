@@ -3,22 +3,11 @@ services:
     name: tpa-backend
     env: node
     plan: free
-    path: .
     buildCommand: "npm ci && npm run build:render"
     startCommand: "node --max-old-space-size=2048 dist/server.js"
     envVars:
       - key: NODE_OPTIONS
         value: "--max-old-space-size=2048"
-    autoDeploy: true
-services:
-  - type: web
-    name: tpa-backend
-    env: node
-    plan: free
-    path: backend
-    buildCommand: "npm run build:render"
-    startCommand: "npm run start"
-    envVars:
-      - key: NODE_OPTIONS
-        value: "--max-old-space-size=2048"
+      - key: NODE_ENV
+        value: production
     autoDeploy: true

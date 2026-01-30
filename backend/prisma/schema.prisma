@@ -84,20 +84,38 @@ model Contact {
 }
 
 model Controversy {
-  id           String     @id @default(uuid())
-  politicianId String
-  title        String
-  description  String
-  date         DateTime
-  sourceUrl    String
-  isVerified   Boolean    @default(false)
-  severity     String     @default("MEDIUM")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  id              String            @id @default(uuid())
+  politicianId    String
+  title           String
+  description     String
+  date            DateTime
+  sourceUrl       String
+  isVerified      Boolean           @default(false)
+  severity        String            @default("MEDIUM")
+  submittedBy     String?
+  upvotes         Int               @default(0)
+  downvotes       Int               @default(0)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Politician      Politician        @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  ControversyVote ControversyVote[]
 
   @@index([isVerified])
   @@index([politicianId])
+}
+
+model ControversyVote {
+  id            String      @id @default(uuid())
+  controversyId String
+  userId        String
+  voteType      String      // 'up' or 'down'
+  createdAt     DateTime    @default(now())
+  Controversy   Controversy @relation(fields: [controversyId], references: [id], onDelete: Cascade)
+  User          User        @relation("ControversyVotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([controversyId, userId])
+  @@index([controversyId])
+  @@index([userId])
 }
 
 model LocalGovernment {
@@ -194,38 +212,74 @@ model Poll {
 }
 
 model Project {
-  id           String     @id @default(uuid())
+  id           String        @id @default(uuid())
   politicianId String
   title        String
   description  String
   location     String?
   budget       Float?
-  status       String     @default("ONGOING")
+  status       String        @default("ONGOING")
   startDate    DateTime?
   endDate      DateTime?
   sourceUrl    String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  submittedBy  String?
+  upvotes      Int           @default(0)
+  downvotes    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Politician   Politician    @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  ProjectVote  ProjectVote[]
 
   @@index([politicianId])
   @@index([status])
 }
 
+model ProjectVote {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  voteType  String   // 'up' or 'down'
+  createdAt DateTime @default(now())
+  Project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  User      User     @relation("ProjectVotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
 model Promise {
-  id           String     @id @default(uuid())
+  id           String        @id @default(uuid())
   politicianId String
   title        String
   description  String
-  status       String     @default("PENDING")
-  fulfillment  Int        @default(0)
+  status       String        @default("PENDING")
+  fulfillment  Int           @default(0)
   sourceUrl    String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  Politician   Politician @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  submittedBy  String?
+  upvotes      Int           @default(0)
+  downvotes    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Politician   Politician    @relation(fields: [politicianId], references: [id], onDelete: Cascade)
+  PromiseVote  PromiseVote[]
 
   @@index([politicianId])
   @@index([status])
+}
+
+model PromiseVote {
+  id        String   @id @default(uuid())
+  promiseId String
+  userId    String
+  voteType  String   // 'up' or 'down'
+  createdAt DateTime @default(now())
+  Promise   Promise  @relation(fields: [promiseId], references: [id], onDelete: Cascade)
+  User      User     @relation("PromiseVotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([promiseId, userId])
+  @@index([promiseId])
+  @@index([userId])
 }
 
 model Ranking {
@@ -334,17 +388,20 @@ model Tenure {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  password  String
-  firstName String?
-  lastName  String?
-  role      Role       @default(USER)
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  AuditLog  AuditLog[]
-  Vote      Vote[]
+  id              String            @id @default(uuid())
+  email           String            @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  role            Role              @default(USER)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  AuditLog        AuditLog[]
+  Vote            Vote[]
+  ProjectVote     ProjectVote[]     @relation("ProjectVotes")
+  PromiseVote     PromiseVote[]     @relation("PromiseVotes")
+  ControversyVote ControversyVote[] @relation("ControversyVotes")
 }
 
 model Vote {
@@ -391,6 +448,10 @@ enum OfficeType {
   AMBASSADOR
   LG_CHAIRMAN
   COUNCILLOR
+  COMMISSIONER
+  SSG
+  FORMER_PRESIDENT
+  FORMER_GOVERNOR
 }
 
 // All 18 INEC-registered political parties for 2023 elections

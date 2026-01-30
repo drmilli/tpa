@@ -1,15 +1,33 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import AnalysisCard from '@/components/AnalysisCard';
+import VoteButtons from '@/components/VoteButtons';
+import toast from 'react-hot-toast';
 import {
   MapPin, Building, Calendar, TrendingUp, CheckCircle, Clock,
   XCircle, FileText, Briefcase, Award, ChevronLeft, Share2,
-  ThumbsUp, ThumbsDown, Users, Loader2
+  ThumbsUp, ThumbsDown, Users, Loader2, Plus, AlertTriangle, Send,
+  ExternalLink
 } from 'lucide-react';
 
 export default function PoliticianProfilePage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
+  const [submitType, setSubmitType] = useState<'project' | 'achievement' | 'controversy'>('project');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [wikiUrl, setWikiUrl] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    sourceUrl: '',
+    date: '',
+    location: '',
+    budget: '',
+    severity: 'MEDIUM',
+  });
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['politician', id],
@@ -18,6 +36,62 @@ export default function PoliticianProfilePage() {
       return response.data.data;
     },
   });
+
+  // Fetch Wikipedia data for bio and photo
+  const { data: wikiData } = useQuery({
+    queryKey: ['politician-wiki', id],
+    queryFn: async () => {
+      const response = await api.get(`/politicians/${id}/wikipedia`);
+      return response.data.data;
+    },
+    enabled: !!data?.politician,
+  });
+
+  useEffect(() => {
+    if (wikiData) {
+      if (wikiData.photoUrl) setPhotoUrl(wikiData.photoUrl);
+      if (wikiData.wikiUrl) setWikiUrl(wikiData.wikiUrl);
+    }
+  }, [wikiData]);
+
+  // Check if user is logged in
+  const isLoggedIn = !!localStorage.getItem('token');
+
+  const submitMutation = useMutation({
+    mutationFn: async (submitData: any) => {
+      const response = await api.post(`/politicians/${id}/submit`, submitData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Submission received! It will be reviewed by our team.');
+      setShowSubmitForm(false);
+      setFormData({
+        title: '',
+        description: '',
+        sourceUrl: '',
+        date: '',
+        location: '',
+        budget: '',
+        severity: 'MEDIUM',
+      });
+      queryClient.invalidateQueries({ queryKey: ['politician', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to submit. Please try again.');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.description) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    submitMutation.mutate({
+      type: submitType,
+      ...formData,
+    });
+  };
 
   const getPartyColor = (party: string) => {
     switch (party) {
@@ -117,7 +191,18 @@ export default function PoliticianProfilePage() {
           </Link>
 
           <div className="flex flex-col md:flex-row md:items-start gap-6">
-            <div className="w-32 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl flex items-center justify-center text-4xl font-bold border-4 border-white/20 flex-shrink-0">
+            {(politician.photoUrl || photoUrl) ? (
+              <img
+                src={politician.photoUrl || photoUrl}
+                alt={`${politician.firstName} ${politician.lastName}`}
+                className="w-32 h-32 rounded-2xl object-cover border-4 border-white/20 flex-shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`w-32 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl flex items-center justify-center text-4xl font-bold border-4 border-white/20 flex-shrink-0 ${(politician.photoUrl || photoUrl) ? 'hidden' : ''}`}>
               {politician.firstName?.[0]}{politician.lastName?.[0]}
             </div>
             <div className="flex-1">
@@ -250,14 +335,22 @@ export default function PoliticianProfilePage() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900 mb-1">{promise.title}</h3>
                           <p className="text-sm text-gray-600 mb-2">{promise.description}</p>
-                          <div className="flex items-center space-x-3 text-xs text-gray-400">
-                            <span>{promise.category}</span>
-                            {promise.targetDate && (
-                              <span>Target: {new Date(promise.targetDate).toLocaleDateString()}</span>
-                            )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 text-xs text-gray-400">
+                              <span>{promise.category}</span>
+                              {promise.targetDate && (
+                                <span>Target: {new Date(promise.targetDate).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                            <VoteButtons
+                              type="promise"
+                              itemId={promise.id}
+                              upvotes={promise.upvotes || 0}
+                              downvotes={promise.downvotes || 0}
+                            />
                           </div>
                         </div>
-                        <span className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold ${getPromiseStatusColor(promise.status)}`}>
+                        <span className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold ml-3 ${getPromiseStatusColor(promise.status)}`}>
                           {getPromiseStatusIcon(promise.status)}
                           <span>{promise.status.replace('_', ' ')}</span>
                         </span>
@@ -310,6 +403,62 @@ export default function PoliticianProfilePage() {
               </div>
             </div>
 
+            {/* Projects Section */}
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900">Projects</h2>
+                <p className="text-sm text-gray-500">{projects.length} projects</p>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {projects.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <Briefcase className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>No projects recorded yet.</p>
+                  </div>
+                ) : (
+                  projects.slice(0, 5).map((project: any) => (
+                    <div key={project.id} className="p-4 hover:bg-gray-50 transition">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{project.description}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 text-xs text-gray-400">
+                              {project.location && <span>{project.location}</span>}
+                              {project.budget && (
+                                <span>₦{project.budget.toLocaleString()}</span>
+                              )}
+                            </div>
+                            <VoteButtons
+                              type="project"
+                              itemId={project.id}
+                              upvotes={project.upvotes || 0}
+                              downvotes={project.downvotes || 0}
+                            />
+                          </div>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ml-3 ${
+                          project.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                          project.status === 'ONGOING' ? 'bg-blue-100 text-blue-700' :
+                          project.status === 'PENDING_VERIFICATION' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {project.status?.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {projects.length > 5 && (
+                <div className="p-4 border-t border-gray-100 text-center">
+                  <button className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                    View all {projects.length} projects
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* AI Analysis Section */}
             <AnalysisCard politicianId={id!} />
           </div>
@@ -329,12 +478,154 @@ export default function PoliticianProfilePage() {
                   <span className="text-xs text-gray-500 mt-1">Disapprove</span>
                 </button>
               </div>
-              <Link
-                to="/login"
-                className="block w-full text-center px-4 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-medium"
-              >
-                Login to Vote
-              </Link>
+
+              {isLoggedIn ? (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setShowSubmitForm(!showSubmitForm)}
+                    className="flex items-center justify-center w-full px-4 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-medium"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Submit Information
+                  </button>
+
+                  {showSubmitForm && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-xl">
+                      <h4 className="font-semibold text-gray-900 mb-3">Submit Record</h4>
+
+                      {/* Type Selection */}
+                      <div className="flex gap-2 mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setSubmitType('project')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                            submitType === 'project'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300'
+                          }`}
+                        >
+                          <Briefcase className="w-3 h-3 inline mr-1" />
+                          Project
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSubmitType('achievement')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                            submitType === 'achievement'
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'
+                          }`}
+                        >
+                          <Award className="w-3 h-3 inline mr-1" />
+                          Achievement
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSubmitType('controversy')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                            submitType === 'controversy'
+                              ? 'bg-red-600 text-white'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:border-red-300'
+                          }`}
+                        >
+                          <AlertTriangle className="w-3 h-3 inline mr-1" />
+                          Issue
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSubmit} className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Title *"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          required
+                        />
+                        <textarea
+                          placeholder="Description *"
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          rows={3}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                          required
+                        />
+                        <input
+                          type="url"
+                          placeholder="Source URL (optional)"
+                          value={formData.sourceUrl}
+                          onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                        <input
+                          type="date"
+                          placeholder="Date"
+                          value={formData.date}
+                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+
+                        {submitType === 'project' && (
+                          <>
+                            <input
+                              type="text"
+                              placeholder="Location"
+                              value={formData.location}
+                              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Budget (NGN)"
+                              value={formData.budget}
+                              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </>
+                        )}
+
+                        {submitType === 'controversy' && (
+                          <select
+                            value={formData.severity}
+                            onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="LOW">Low Severity</option>
+                            <option value="MEDIUM">Medium Severity</option>
+                            <option value="HIGH">High Severity</option>
+                          </select>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={submitMutation.isPending}
+                          className="w-full flex items-center justify-center px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition font-medium disabled:opacity-50"
+                        >
+                          {submitMutation.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Submit for Review
+                            </>
+                          )}
+                        </button>
+                      </form>
+
+                      <p className="text-xs text-gray-500 mt-3">
+                        Submissions are reviewed by our team before being published.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="block w-full text-center px-4 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition font-medium"
+                >
+                  Login to Contribute
+                </Link>
+              )}
             </div>
 
             {/* Ranking Position */}
@@ -357,11 +648,23 @@ export default function PoliticianProfilePage() {
             </div>
 
             {/* Bio */}
-            {politician.biography && (
+            {(politician.biography || wikiData?.biography) && (
               <div className="bg-white rounded-xl border border-gray-100 p-5">
-                <h3 className="font-bold text-gray-900 mb-3">Biography</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {politician.biography}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-gray-900">Biography</h3>
+                  {wikiUrl && (
+                    <a
+                      href={wikiUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary-600 hover:text-primary-700 flex items-center"
+                    >
+                      Wikipedia <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                  {politician.biography || wikiData?.biography}
                 </p>
               </div>
             )}
