@@ -12,6 +12,23 @@ interface WikipediaBioResult {
   wikiUrl: string | null;
 }
 
+interface WikipediaSearchResponse {
+  query?: {
+    search?: WikipediaSearchResult[];
+  };
+}
+
+interface WikipediaPageResponse {
+  query?: {
+    pages?: Record<string, {
+      extract?: string;
+      thumbnail?: {
+        source?: string;
+      };
+    }>;
+  };
+}
+
 class WikipediaService {
   private readonly WIKI_API_URL = 'https://en.wikipedia.org/w/api.php';
 
@@ -65,9 +82,9 @@ class WikipediaService {
         });
 
         const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-        const data = await response.json();
+        const data: WikipediaSearchResponse = await response.json();
 
-        if (data.query?.search?.length > 0) {
+        if (data.query?.search && data.query.search.length > 0) {
           // Find the most relevant result by checking if the title contains the person's name
           const queryParts = query.toLowerCase().split(' ');
           const relevantResult = data.query.search.find((result: WikipediaSearchResult) => {
@@ -107,7 +124,7 @@ class WikipediaService {
       });
 
       const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-      const data = await response.json();
+      const data: WikipediaPageResponse = await response.json();
 
       const pages = data.query?.pages;
       if (!pages) return null;
@@ -141,7 +158,7 @@ class WikipediaService {
       });
 
       const response = await fetch(`${this.WIKI_API_URL}?${params}`);
-      const data = await response.json();
+      const data: WikipediaPageResponse = await response.json();
 
       const pages = data.query?.pages;
       if (!pages) return null;
@@ -156,7 +173,7 @@ class WikipediaService {
     }
   }
 
-  async updatePoliticianFromWikipedia(politicianId: string, firstName: string, lastName: string): Promise<WikipediaBioResult> {
+  async updatePoliticianFromWikipedia(_politicianId: string, firstName: string, lastName: string): Promise<WikipediaBioResult> {
     const result = await this.fetchPoliticianInfo(firstName, lastName);
 
     if (result.biography || result.photoUrl) {
