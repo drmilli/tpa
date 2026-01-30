@@ -4,10 +4,10 @@ services:
     env: node
     plan: free
     buildCommand: "npm ci && npm run build:render"
-    startCommand: "node --max-old-space-size=2048 dist/server.js"
+    startCommand: "node dist/server.js"
     envVars:
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=2048"
+        value: "--max-old-space-size=384"
       - key: NODE_ENV
         value: production
     autoDeploy: true
