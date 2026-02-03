@@ -4,14 +4,11 @@ import {
   TrendingUp,
   Users,
   Vote,
-  BookOpen,
   CheckCircle,
   XCircle,
   AlertTriangle,
   Flame,
   ArrowRight,
-  Calendar,
-  Eye,
   MessageSquare,
   Star,
   Award,
@@ -55,36 +52,6 @@ const trendingPoliticians = [
     party: 'PDP',
     trend: '+5%',
     image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Nyesom_Wike_portrait.png/220px-Nyesom_Wike_portrait.png'
-  },
-];
-
-const latestBlogPosts = [
-  {
-    id: 1,
-    title: 'Understanding the 2024 Budget: What It Means for Nigerians',
-    excerpt: 'A comprehensive breakdown of the national budget and its implications for ordinary citizens.',
-    category: 'Economy',
-    date: '2024-01-15',
-    readTime: '5 min read',
-    views: 2340,
-  },
-  {
-    id: 2,
-    title: 'State Governors Performance Review: Q4 2023',
-    excerpt: 'Our quarterly assessment of state governors based on key performance indicators.',
-    category: 'Rankings',
-    date: '2024-01-12',
-    readTime: '8 min read',
-    views: 4520,
-  },
-  {
-    id: 3,
-    title: 'The Rise of Third-Party Politics in Nigeria',
-    excerpt: 'Analyzing the growing influence of alternative political parties in Nigerian democracy.',
-    category: 'Politics',
-    date: '2024-01-10',
-    readTime: '6 min read',
-    views: 3180,
   },
 ];
 
@@ -367,72 +334,6 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Blog Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-100 p-3 rounded-xl">
-                <BookOpen className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Latest from Our Blog</h2>
-                <p className="text-gray-600">Insights, analysis, and political commentary</p>
-              </div>
-            </div>
-            <Link
-              to="/blogs"
-              className="hidden sm:flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
-            >
-              All Articles <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {latestBlogPosts.map((post, index) => (
-              <article
-                key={post.id}
-                className="group bg-gray-50 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 animate-fade-in-up opacity-0"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="h-48 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-                  <BookOpen className="w-16 h-16 text-white/50" />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
-                      {post.category}
-                    </span>
-                    <span className="text-gray-500 text-xs flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(post.date).toLocaleDateString('en-NG', { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2">
-                    {post.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      {post.views.toLocaleString()}
-                    </span>
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <Link
-            to="/blogs"
-            className="sm:hidden flex items-center justify-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors mt-6"
-          >
-            View All Articles <ChevronRight className="w-4 h-4" />
-          </Link>
         </div>
       </section>
 
