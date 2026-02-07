@@ -38,7 +38,7 @@ export default function BlogsPage() {
     },
   });
 
-  const posts: BlogPost[] = data?.posts || [];
+  const posts: BlogPost[] = data?.blogs || [];
   const categories = ['all', 'News', 'Analysis', 'Opinion', 'Education', 'Rankings', 'Accountability'];
 
   const filteredPosts = posts.filter(p => {
