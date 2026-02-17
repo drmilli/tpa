@@ -255,7 +255,7 @@ export default function BlogPostPage() {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
-  const CommentComponent = ({ comment, isReply = false, parentId }: { comment: Comment; isReply?: boolean; parentId?: string }) => (
+  const CommentComponent = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => (
     <div className={`${isReply ? 'ml-12 mt-4' : ''}`}>
       <div className="flex items-start space-x-3">
         <div className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm`}>
@@ -332,7 +332,7 @@ export default function BlogPostPage() {
           {comment.Replies && comment.Replies.length > 0 && (
             <div className="mt-2">
               {comment.Replies.map(reply => (
-                <CommentComponent key={reply.id} comment={reply} isReply parentId={comment.id} />
+                <CommentComponent key={reply.id} comment={reply} isReply />
               ))}
             </div>
           )}
@@ -634,7 +634,7 @@ export default function BlogPostPage() {
 
               {/* Comments List */}
               <div className="space-y-6">
-                {comments.map(comment => (
+                {comments.map((comment: Comment) => (
                   <CommentComponent key={comment.id} comment={comment} />
                 ))}
               </div>
