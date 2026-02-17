@@ -105,11 +105,18 @@ export default function HomePage() {
   const recentBlogs = blogsData?.blogs?.slice(0, 3) || [];
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    if (!dateString) return 'Recent';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Recent';
+      return date.toLocaleDateString('en-NG', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Recent';
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -474,9 +481,9 @@ export default function HomePage() {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="h-48 bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center overflow-hidden">
-                    {post.featuredImage ? (
+                    {(post.coverImage || post.featuredImage) ? (
                       <img
-                        src={post.featuredImage}
+                        src={post.coverImage || post.featuredImage}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -491,7 +498,7 @@ export default function HomePage() {
                       </span>
                       <span className="text-xs text-gray-400">
                         <Calendar className="w-3 h-3 inline mr-1" />
-                        {formatDate(post.createdAt)}
+                        {formatDate(post.publishedAt)}
                       </span>
                     </div>
                     <h3 className="font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">

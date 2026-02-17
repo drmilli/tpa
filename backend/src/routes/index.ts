@@ -5,6 +5,7 @@ import officeRoutes from './office.routes';
 import rankingRoutes from './ranking.routes';
 import pollRoutes from './poll.routes';
 import blogRoutes from './blog.routes';
+import commentRoutes from './comment.routes';
 import locationRoutes from './location.routes';
 import contactRoutes from './contact.routes';
 import analysisRoutes from './analysis.routes';
@@ -21,6 +22,7 @@ router.use('/offices', officeRoutes);
 router.use('/rankings', rankingRoutes);
 router.use('/polls', pollRoutes);
 router.use('/blogs', blogRoutes);
+router.use('/', commentRoutes); // Comment routes are mounted at root since they include /blogs/:blogId/comments
 router.use('/locations', locationRoutes);
 router.use('/contact', contactRoutes);
 router.use('/analysis', analysisRoutes);

@@ -41,24 +41,46 @@ model Bill {
 }
 
 model Blog {
-  id          String    @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
-  slug        String    @unique
+  slug        String       @unique
   content     String
   excerpt     String?
   coverImage  String?
   authorId    String
   category    String?
   tags        String[]
-  isPublished Boolean   @default(false)
+  isPublished Boolean      @default(false)
   publishedAt DateTime?
-  views       Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  views       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Comment     BlogComment[]
 
   @@index([isPublished])
   @@index([publishedAt])
   @@index([slug])
+}
+
+model BlogComment {
+  id        String         @id @default(uuid())
+  blogId    String
+  userId    String?
+  parentId  String?
+  content   String
+  likes     Int            @default(0)
+  dislikes  Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  Blog      Blog           @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  User      User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  Parent    BlogComment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  Replies   BlogComment[]  @relation("CommentReplies")
+
+  @@index([blogId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
 }
 
 model Contact {
@@ -402,6 +424,7 @@ model User {
   ProjectVote     ProjectVote[]     @relation("ProjectVotes")
   PromiseVote     PromiseVote[]     @relation("PromiseVotes")
   ControversyVote ControversyVote[] @relation("ControversyVotes")
+  BlogComment     BlogComment[]
 }
 
 model Vote {

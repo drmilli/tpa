@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -11,15 +11,17 @@ import toast from 'react-hot-toast';
 
 interface Comment {
   id: string;
-  author: {
-    name: string;
-    avatar?: string;
+  User?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
   };
   content: string;
   createdAt: string;
   likes: number;
   dislikes: number;
-  replies?: Comment[];
+  Replies?: Comment[];
 }
 
 interface BlogPost {
@@ -29,14 +31,16 @@ interface BlogPost {
   excerpt: string;
   content: string;
   category: string;
-  author: {
+  author?: {
     firstName: string;
     lastName: string;
   };
-  createdAt: string;
+  publishedAt: string;
+  createdAt?: string;
   readTime?: number;
   views: number;
   featuredImage?: string;
+  coverImage?: string;
   tags: string[];
 }
 
@@ -52,6 +56,17 @@ export default function BlogPostPage() {
     enabled: !!slug,
   });
 
+  // Fetch comments
+  const { data: commentsData, refetch: refetchComments } = useQuery({
+    queryKey: ['blogComments', post?.id],
+    queryFn: async () => {
+      if (!post?.id) return [];
+      const response = await api.get(`/blogs/${post.id}/comments`);
+      return response.data.data;
+    },
+    enabled: !!post?.id,
+  });
+
   // State management
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
@@ -61,7 +76,23 @@ export default function BlogPostPage() {
   const [commentText, setCommentText] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [readingProgress, setReadingProgress] = useState(0);
+
+  const comments = commentsData || [];
+
+  // Reading progress tracker
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY;
+      const scrollPercent = (scrollTop / (documentHeight - windowHeight)) * 100;
+      setReadingProgress(Math.min(100, Math.max(0, scrollPercent)));
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const getAuthorName = (author: BlogPost['author']) => {
     if (!author) return 'Editorial Team';
@@ -143,65 +174,60 @@ export default function BlogPostPage() {
   };
 
   // Comment handlers
-  const handleAddComment = () => {
-    if (!commentText.trim()) return;
+  const handleAddComment = async () => {
+    if (!commentText.trim() || !post?.id) return;
 
-    const newComment: Comment = {
-      id: Date.now().toString(),
-      author: { name: 'Anonymous User' },
-      content: commentText,
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      dislikes: 0,
-    };
+    try {
+      await api.post(`/blogs/${post.id}/comments`, {
+        content: commentText,
+      });
 
-    setComments(prev => [newComment, ...prev]);
-    setCommentText('');
-    toast.success('Comment posted successfully!');
+      setCommentText('');
+      refetchComments();
+      toast.success('Comment posted successfully!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error?.message || 'Failed to post comment');
+    }
   };
 
-  const handleAddReply = (commentId: string) => {
-    if (!replyText.trim()) return;
+  const handleAddReply = async (commentId: string) => {
+    if (!replyText.trim() || !post?.id) return;
 
-    const newReply: Comment = {
-      id: `${commentId}-${Date.now()}`,
-      author: { name: 'Anonymous User' },
-      content: replyText,
-      createdAt: new Date().toISOString(),
-      likes: 0,
-      dislikes: 0,
-    };
+    try {
+      await api.post(`/blogs/${post.id}/comments`, {
+        content: replyText,
+        parentId: commentId,
+      });
 
-    setComments(prev => prev.map(comment => {
-      if (comment.id === commentId) {
-        return {
-          ...comment,
-          replies: [...(comment.replies || []), newReply]
-        };
-      }
-      return comment;
-    }));
-
-    setReplyText('');
-    setReplyingTo(null);
-    toast.success('Reply posted successfully!');
+      setReplyText('');
+      setReplyingTo(null);
+      refetchComments();
+      toast.success('Reply posted successfully!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error?.message || 'Failed to post reply');
+    }
   };
 
-  const handleCommentLike = (commentId: string, isReply = false, parentId?: string) => {
-    setComments(prev => prev.map(comment => {
-      if (isReply && parentId && comment.id === parentId) {
-        return {
-          ...comment,
-          replies: comment.replies?.map(reply =>
-            reply.id === commentId ? { ...reply, likes: reply.likes + 1 } : reply
-          )
-        };
-      }
-      if (comment.id === commentId) {
-        return { ...comment, likes: comment.likes + 1 };
-      }
-      return comment;
-    }));
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      await api.patch(`/comments/${commentId}`, {
+        action: 'like',
+      });
+      refetchComments();
+    } catch (error: any) {
+      toast.error('Failed to like comment');
+    }
+  };
+
+  const handleCommentDislike = async (commentId: string) => {
+    try {
+      await api.patch(`/comments/${commentId}`, {
+        action: 'dislike',
+      });
+      refetchComments();
+    } catch (error: any) {
+      toast.error('Failed to dislike comment');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -217,17 +243,29 @@ export default function BlogPostPage() {
     return date.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const getCommentAuthorName = (comment: Comment) => {
+    if (comment.User) {
+      return `${comment.User.firstName || ''} ${comment.User.lastName || ''}`.trim() || 'User';
+    }
+    return 'Anonymous';
+  };
+
+  const getCommentAuthorInitials = (comment: Comment) => {
+    const name = getCommentAuthorName(comment);
+    return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  };
+
   const CommentComponent = ({ comment, isReply = false, parentId }: { comment: Comment; isReply?: boolean; parentId?: string }) => (
     <div className={`${isReply ? 'ml-12 mt-4' : ''}`}>
       <div className="flex items-start space-x-3">
         <div className={`${isReply ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm`}>
-          {comment.author.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+          {getCommentAuthorInitials(comment)}
         </div>
         <div className="flex-1">
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <span className="font-semibold text-gray-900 text-sm">{comment.author.name}</span>
+                <span className="font-semibold text-gray-900 text-sm">{getCommentAuthorName(comment)}</span>
                 <span className="text-xs text-gray-400">{formatDate(comment.createdAt)}</span>
               </div>
               <button className="p-1 text-gray-400 hover:text-gray-600 rounded">
@@ -240,11 +278,18 @@ export default function BlogPostPage() {
           {/* Comment Actions */}
           <div className="flex items-center space-x-4 mt-2 px-2">
             <button
-              onClick={() => handleCommentLike(comment.id, isReply, parentId)}
+              onClick={() => handleCommentLike(comment.id)}
               className="flex items-center space-x-1 text-gray-500 hover:text-primary-600 transition text-sm"
             >
               <ThumbsUp className="w-4 h-4" />
               <span>{comment.likes}</span>
+            </button>
+            <button
+              onClick={() => handleCommentDislike(comment.id)}
+              className="flex items-center space-x-1 text-gray-500 hover:text-red-600 transition text-sm"
+            >
+              <ThumbsDown className="w-4 h-4" />
+              <span>{comment.dislikes}</span>
             </button>
             {!isReply && (
               <button
@@ -284,9 +329,9 @@ export default function BlogPostPage() {
           )}
 
           {/* Replies */}
-          {comment.replies && comment.replies.length > 0 && (
+          {comment.Replies && comment.Replies.length > 0 && (
             <div className="mt-2">
-              {comment.replies.map(reply => (
+              {comment.Replies.map(reply => (
                 <CommentComponent key={reply.id} comment={reply} isReply parentId={comment.id} />
               ))}
             </div>
@@ -328,8 +373,16 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Reading Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+        <div
+          className="h-full bg-gradient-to-r from-primary-500 to-emerald-500 transition-all duration-150"
+          style={{ width: `${readingProgress}%` }}
+        />
+      </div>
+
       {/* Hero/Header */}
-      <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-12">
+      <div className="bg-gradient-to-br from-primary-600 to-primary-800 text-white py-12 mt-1">
         <div className="container mx-auto px-4">
           <Link
             to="/blogs"
@@ -356,7 +409,7 @@ export default function BlogPostPage() {
               </div>
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
-                <span>{new Date(post.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span>{new Date(post.publishedAt || post.createdAt || new Date()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               <div className="flex items-center">
                 <Eye className="w-4 h-4 mr-2" />
@@ -373,8 +426,8 @@ export default function BlogPostPage() {
           <div className="lg:col-span-2">
             {/* Featured Image */}
             <div className="bg-gradient-to-br from-primary-400 to-primary-600 rounded-2xl h-64 md:h-96 flex items-center justify-center mb-8 -mt-16 shadow-xl overflow-hidden">
-              {post.featuredImage ? (
-                <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
+              {(post.coverImage || post.featuredImage) ? (
+                <img src={post.coverImage || post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
               ) : (
                 <BookOpen className="w-24 h-24 text-white/30" />
               )}
@@ -382,8 +435,43 @@ export default function BlogPostPage() {
 
             {/* Article Content */}
             <article className="bg-white rounded-2xl border border-gray-100 p-6 md:p-10 shadow-sm">
+              {/* Article Introduction */}
+              {post.excerpt && (
+                <div className="mb-8 pb-6 border-b-2 border-gray-100">
+                  <p className="text-xl text-gray-600 leading-relaxed italic">
+                    {post.excerpt}
+                  </p>
+                </div>
+              )}
+
               <div
-                className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900"
+                className="prose prose-lg max-w-none
+                  first-letter:text-7xl first-letter:font-bold first-letter:text-primary-600 first-letter:float-left first-letter:mr-3 first-letter:leading-[0.85]
+                  prose-headings:font-bold prose-headings:text-gray-900 prose-headings:tracking-tight
+                  prose-h1:text-4xl prose-h1:mb-6 prose-h1:mt-8 prose-h1:pb-3 prose-h1:border-b-2 prose-h1:border-primary-200
+                  prose-h2:text-3xl prose-h2:mb-5 prose-h2:mt-12 prose-h2:text-primary-700 prose-h2:relative prose-h2:pl-4 prose-h2:before:content-[''] prose-h2:before:absolute prose-h2:before:left-0 prose-h2:before:top-0 prose-h2:before:bottom-0 prose-h2:before:w-1 prose-h2:before:bg-primary-500
+                  prose-h3:text-2xl prose-h3:mb-4 prose-h3:mt-8 prose-h3:text-gray-800
+                  prose-h4:text-xl prose-h4:mb-3 prose-h4:mt-6 prose-h4:text-gray-700
+                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6 prose-p:text-lg
+                  prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary-700 prose-a:font-medium prose-a:transition-colors
+                  prose-strong:text-gray-900 prose-strong:font-semibold prose-strong:bg-yellow-50 prose-strong:px-1
+                  prose-em:text-gray-700 prose-em:italic
+                  prose-code:bg-gray-100 prose-code:text-primary-600 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none prose-code:border prose-code:border-gray-200
+                  prose-pre:bg-gradient-to-br prose-pre:from-gray-900 prose-pre:to-gray-800 prose-pre:text-gray-100 prose-pre:rounded-xl prose-pre:p-5 prose-pre:overflow-x-auto prose-pre:shadow-xl prose-pre:border prose-pre:border-gray-700
+                  prose-blockquote:border-l-4 prose-blockquote:border-primary-500 prose-blockquote:bg-gradient-to-r prose-blockquote:from-primary-50 prose-blockquote:to-transparent prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-5 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:my-8 prose-blockquote:shadow-sm
+                  prose-blockquote:text-gray-700 prose-blockquote:font-normal prose-blockquote:text-xl
+                  prose-ul:list-none prose-ul:pl-0 prose-ul:my-6 prose-ul:space-y-3
+                  prose-ul>li:pl-6 prose-ul>li:relative prose-ul>li:before:content-['→'] prose-ul>li:before:absolute prose-ul>li:before:left-0 prose-ul>li:before:text-primary-600 prose-ul>li:before:font-bold
+                  prose-ol:list-none prose-ol:pl-0 prose-ol:my-6 prose-ol:space-y-3 prose-ol:counter-reset-[item]
+                  prose-ol>li:pl-8 prose-ol>li:relative prose-ol>li:counter-increment-[item] prose-ol>li:before:content-[counter(item)] prose-ol>li:before:absolute prose-ol>li:before:left-0 prose-ol>li:before:top-0 prose-ol>li:before:w-6 prose-ol>li:before:h-6 prose-ol>li:before:bg-primary-600 prose-ol>li:before:text-white prose-ol>li:before:rounded-full prose-ol>li:before:flex prose-ol>li:before:items-center prose-ol>li:before:justify-center prose-ol>li:before:text-sm prose-ol>li:before:font-semibold
+                  prose-li:text-gray-700 prose-li:leading-relaxed prose-li:text-lg
+                  prose-img:rounded-2xl prose-img:shadow-2xl prose-img:my-10 prose-img:w-full prose-img:border-4 prose-img:border-gray-100
+                  prose-hr:border-t-2 prose-hr:border-gray-200 prose-hr:my-12
+                  prose-table:border-collapse prose-table:w-full prose-table:my-8 prose-table:shadow-md prose-table:rounded-xl prose-table:overflow-hidden
+                  prose-thead:bg-gradient-to-r prose-thead:from-gray-50 prose-thead:to-gray-100 prose-thead:border-b-2 prose-thead:border-gray-300
+                  prose-th:px-6 prose-th:py-4 prose-th:text-left prose-th:font-semibold prose-th:text-gray-900 prose-th:text-sm prose-th:uppercase prose-th:tracking-wider
+                  prose-td:px-6 prose-td:py-4 prose-td:border-b prose-td:border-gray-200 prose-td:text-gray-700
+                  prose-tr:transition-colors prose-tr:hover:bg-gray-50"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
 

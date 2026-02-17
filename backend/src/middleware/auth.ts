@@ -39,3 +39,20 @@ export const authorize = (...roles: string[]) => {
     next();
   };
 };
+
+// Optional authentication - attach user if token is valid, but don't fail if not present
+export const optionalAuth = (req: AuthRequest, _res: Response, next: NextFunction) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      req.user = decoded;
+    }
+
+    next();
+  } catch (error) {
+    // If token is invalid, just continue without user data
+    next();
+  }
+};

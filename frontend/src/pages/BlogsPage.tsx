@@ -14,14 +14,16 @@ interface BlogPost {
   excerpt: string;
   content: string;
   category: string;
-  author: {
+  author?: {
     firstName: string;
     lastName: string;
   };
-  createdAt: string;
+  publishedAt: string;
+  createdAt?: string;
   readTime?: number;
   views: number;
   featuredImage?: string;
+  coverImage?: string;
   tags: string[];
   status: string;
 }
@@ -146,7 +148,7 @@ export default function BlogsPage() {
                 <TrendingUp className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{posts.filter(p => new Date(p.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</p>
+                <p className="text-2xl font-bold text-gray-900">{posts.filter(p => p.publishedAt && new Date(p.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</p>
                 <p className="text-sm text-gray-500">This Week</p>
               </div>
             </div>
@@ -198,8 +200,8 @@ export default function BlogsPage() {
               {featuredPost && selectedCategory === 'all' && !searchQuery && (
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
                   <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-                    {featuredPost.featuredImage ? (
-                      <img src={featuredPost.featuredImage} alt={featuredPost.title} className="w-full h-full object-cover" />
+                    {(featuredPost.coverImage || featuredPost.featuredImage) ? (
+                      <img src={featuredPost.coverImage || featuredPost.featuredImage} alt={featuredPost.title} className="w-full h-full object-cover" />
                     ) : (
                       <BookOpen className="w-20 h-20 text-white/50" />
                     )}
@@ -225,7 +227,7 @@ export default function BlogsPage() {
                         </div>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
-                          <span>{formatDate(featuredPost.createdAt)}</span>
+                          <span>{formatDate(featuredPost.publishedAt)}</span>
                         </div>
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
@@ -254,8 +256,8 @@ export default function BlogsPage() {
                     <div key={post.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition group">
                       <div className="flex gap-5">
                         <div className="hidden sm:flex w-32 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex-shrink-0 items-center justify-center overflow-hidden">
-                          {post.featuredImage ? (
-                            <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
+                          {(post.coverImage || post.featuredImage) ? (
+                            <img src={post.coverImage || post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
                           ) : (
                             <FileText className="w-8 h-8 text-gray-400" />
                           )}
@@ -266,7 +268,7 @@ export default function BlogsPage() {
                               {post.category}
                             </span>
                             <span className="text-xs text-gray-400">
-                              {formatDate(post.createdAt)}
+                              {formatDate(post.publishedAt)}
                             </span>
                           </div>
                           <Link to={`/blogs/${post.slug}`}>
