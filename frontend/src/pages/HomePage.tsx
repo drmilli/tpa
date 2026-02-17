@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
 import {
   Search,
   TrendingUp,
@@ -16,7 +18,11 @@ import {
   Shield,
   Zap,
   Globe,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Calendar,
+  Clock,
+  User
 } from 'lucide-react';
 
 // Mock data for sections
@@ -87,6 +93,37 @@ const stats = [
 ];
 
 export default function HomePage() {
+  // Fetch recent blog posts
+  const { data: blogsData } = useQuery({
+    queryKey: ['recentBlogs'],
+    queryFn: async () => {
+      const response = await api.get('/blogs');
+      return response.data.data;
+    },
+  });
+
+  const recentBlogs = blogsData?.blogs?.slice(0, 3) || [];
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-NG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'News': return 'bg-blue-100 text-blue-700';
+      case 'Analysis': return 'bg-purple-100 text-purple-700';
+      case 'Opinion': return 'bg-orange-100 text-orange-700';
+      case 'Education': return 'bg-emerald-100 text-emerald-700';
+      case 'Rankings': return 'bg-yellow-100 text-yellow-700';
+      case 'Accountability': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="overflow-hidden">
       {/* Hero Section */}
@@ -405,6 +442,91 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Latest Blog Posts Section */}
+      {recentBlogs.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-100 p-3 rounded-xl">
+                  <BookOpen className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Latest Insights</h2>
+                  <p className="text-gray-600">Stay informed with our latest analysis and news</p>
+                </div>
+              </div>
+              <Link
+                to="/blogs"
+                className="hidden sm:flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium transition-colors"
+              >
+                View All Articles <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {recentBlogs.map((post: any, index: number) => (
+                <Link
+                  key={post.id}
+                  to={`/blogs/${post.slug}`}
+                  className="group bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in-up opacity-0"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="h-48 bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center overflow-hidden">
+                    {post.featuredImage ? (
+                      <img
+                        src={post.featuredImage}
+                        alt={post.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <BookOpen className="w-16 h-16 text-white/50" />
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(post.category)}`}>
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        <Calendar className="w-3 h-3 inline mr-1" />
+                        {formatDate(post.createdAt)}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {post.author ? `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() || 'Editorial Team' : 'Editorial Team'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {post.readTime || 5} min read
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center">
+              <Link
+                to="/blogs"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors"
+              >
+                <BookOpen className="w-5 h-5" />
+                Explore All Articles
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Newsletter & CTA Section */}
       <section className="py-16 bg-gray-50">
