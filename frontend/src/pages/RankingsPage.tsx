@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { HorizontalAd } from '@/components/AdUnit';
 import {
   TrendingUp, Search, Trophy, Medal, Award,
   Star, Users, ChevronRight, Loader2, Crown, Building2,
@@ -499,6 +500,9 @@ export default function RankingsPage() {
             </div>
           )}
         </div>
+
+        {/* Ad before info banner */}
+        <HorizontalAd className="mt-8" />
 
         {/* Info Banner */}
         <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-6">

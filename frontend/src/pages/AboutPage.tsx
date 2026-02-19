@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Target, Shield, Users, BarChart3, Award, Globe, Mail } from 'lucide-react';
+import { HorizontalAd } from '@/components/AdUnit';
 
 export default function AboutPage() {
   const values = [
@@ -164,6 +165,11 @@ export default function AboutPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Ad before CTA */}
+      <div className="container mx-auto px-4 mb-4">
+        <HorizontalAd />
       </div>
 
       {/* CTA */}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { HorizontalAd } from '@/components/AdUnit';
 import {
   Search,
   TrendingUp,
@@ -275,6 +276,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Ad Unit - between sections */}
+      <div className="bg-white py-4">
+        <div className="container mx-auto px-4">
+          <HorizontalAd />
+        </div>
+      </div>
+
       {/* Fact Checker Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
@@ -534,6 +542,13 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Ad Unit - before newsletter */}
+      <div className="bg-gray-50 py-4">
+        <div className="container mx-auto px-4">
+          <HorizontalAd />
+        </div>
+      </div>
 
       {/* Newsletter & CTA Section */}
       <section className="py-16 bg-gray-50">

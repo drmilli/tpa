@@ -12,7 +12,8 @@
       "Bash(npm install)",
       "Bash(node -e:*)",
       "Bash(npm run build:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(curl:*)"
     ]
   }
 }

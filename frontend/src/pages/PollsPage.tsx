@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { HorizontalAd } from '@/components/AdUnit';
 import {
   Vote, Users, Calendar, Clock, CheckCircle, BarChart2,
   ChevronRight, Search, Filter, TrendingUp, Loader2
@@ -444,6 +445,9 @@ export default function PollsPage() {
             </div>
           )}
         </div>
+
+        {/* Ad before CTA */}
+        <HorizontalAd className="mb-8" />
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-2xl p-8 text-white text-center">

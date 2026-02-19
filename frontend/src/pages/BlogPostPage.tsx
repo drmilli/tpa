@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { HorizontalAd, SquareAd } from '@/components/AdUnit';
 import {
   Calendar, User, Eye, Share2, Facebook, Twitter,
   ChevronLeft, Tag, BookOpen, ThumbsUp, ThumbsDown, MessageSquare,
@@ -583,6 +584,9 @@ export default function BlogPostPage() {
               </div>
             </article>
 
+            {/* Ad after article */}
+            <HorizontalAd className="mt-6" />
+
             {/* Author Box */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 mt-6 shadow-sm">
               <div className="flex items-start space-x-4">
@@ -665,6 +669,9 @@ export default function BlogPostPage() {
                 Subscribe
               </button>
             </div>
+
+            {/* Ad in sidebar */}
+            <SquareAd className="rounded-xl overflow-hidden" />
 
             {/* Back to Blog */}
             <div className="bg-white rounded-xl border border-gray-100 p-5">

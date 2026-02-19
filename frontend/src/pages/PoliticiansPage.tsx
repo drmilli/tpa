@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import SEO from '@/components/SEO';
+import { HorizontalAd } from '@/components/AdUnit';
 import {
   Search, Users, MapPin, Building, TrendingUp, ChevronRight,
   Filter, Grid, List, Loader2
@@ -345,6 +346,9 @@ export default function PoliticiansPage() {
             </button>
           </div>
         )}
+
+        {/* Ad after list */}
+        <HorizontalAd className="mt-8" />
 
         {/* Info CTA */}
         <div className="mt-12 bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white text-center">

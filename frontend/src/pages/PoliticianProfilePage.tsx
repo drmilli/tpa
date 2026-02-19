@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import AnalysisCard from '@/components/AnalysisCard';
 import VoteButtons from '@/components/VoteButtons';
+import { SquareAd } from '@/components/AdUnit';
 import toast from 'react-hot-toast';
 import {
   MapPin, Building, Calendar, TrendingUp, CheckCircle, Clock,
@@ -627,6 +628,9 @@ export default function PoliticianProfilePage() {
                 </Link>
               )}
             </div>
+
+            {/* Ad in sidebar */}
+            <SquareAd className="rounded-xl overflow-hidden" />
 
             {/* Ranking Position */}
             <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200 p-5">

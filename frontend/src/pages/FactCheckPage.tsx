@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
+import { HorizontalAd } from '@/components/AdUnit';
 import {
   Search, Filter, CheckCircle, XCircle, AlertCircle, HelpCircle,
   Calendar, ChevronRight, Share2, ExternalLink,
@@ -672,6 +673,9 @@ export default function FactCheckPage() {
             })
           )}
         </div>
+
+        {/* Ad before CTA */}
+        <HorizontalAd className="mt-8" />
 
         {/* Submit a Claim CTA */}
         <div className="mt-12 bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { HorizontalAd, SquareAd } from '@/components/AdUnit';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import {
@@ -312,6 +313,9 @@ export default function BlogsPage() {
                     <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
                   </div>
                 )}
+
+                {/* Ad below posts list */}
+                <HorizontalAd className="mt-4" />
               </div>
             </div>
 
@@ -341,6 +345,9 @@ export default function BlogsPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Ad in sidebar */}
+              <SquareAd className="rounded-xl overflow-hidden" />
 
               {/* Categories */}
               <div className="bg-white rounded-xl border border-gray-100 p-5">
