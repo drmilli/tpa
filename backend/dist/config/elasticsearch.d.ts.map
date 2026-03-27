@@ -1,0 +1,1 @@
+{"version":3,"file":"elasticsearch.d.ts","sourceRoot":"","sources":["../../src/config/elasticsearch.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,wBAAwB,CAAC;AAGhD,eAAO,MAAM,QAAQ,QAEnB,CAAC;AAEH,eAAO,MAAM,oBAAoB,qBAOhC,CAAC;AAEF,eAAO,MAAM,qBAAqB,qBAwBjC,CAAC"}

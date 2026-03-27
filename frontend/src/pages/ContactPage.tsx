@@ -75,7 +75,7 @@ export default function ContactPage() {
                   <Phone className="w-6 h-6 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
-                    <p>+234 XXX XXX XXXX</p>
+                    <p>+234812255555</p>
                     <p className="text-sm text-primary-100">Mon-Fri, 9am-5pm WAT</p>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ export default function ContactPage() {
                   <MapPin className="w-6 h-6 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold mb-1">Location</h3>
-                    <p>Lagos, Nigeria</p>
+                    <p>Abuja, Nigeria</p>
                   </div>
                 </div>
 

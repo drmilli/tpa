@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   Plus, Search, Edit2, Trash2, Eye, FileText,
-  ChevronLeft, ChevronRight, X, Image, Tag, Clock, Save, Loader2
+  ChevronLeft, ChevronRight, X, Image, Tag, Clock, Save, Loader2,
+  Video, Upload
 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -13,6 +14,7 @@ interface BlogPost {
   content: string;
   excerpt: string;
   coverImage: string | null;
+  videoUrl: string | null;
   category: string | null;
   tags: string[];
   isPublished: boolean;
@@ -29,6 +31,7 @@ interface BlogFormData {
   content: string;
   excerpt: string;
   coverImage: string;
+  videoUrl: string;
   category: string;
   tags: string;
   isPublished: boolean;
@@ -41,6 +44,7 @@ const initialFormData: BlogFormData = {
   content: '',
   excerpt: '',
   coverImage: '',
+  videoUrl: '',
   category: '',
   tags: '',
   isPublished: false,
@@ -57,6 +61,8 @@ export default function BlogsPage() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [formData, setFormData] = useState<BlogFormData>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -106,6 +112,22 @@ export default function BlogsPage() {
       .replace(/(^-|-$)/g, '');
   };
 
+  const uploadMedia = async (file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+
+    const response = await api.post('/blogs/admin/upload', body, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data.data as {
+      secureUrl: string;
+      resourceType: 'image' | 'video';
+    };
+  };
+
   const handleTitleChange = (title: string) => {
     setFormData(prev => ({
       ...prev,
@@ -132,6 +154,7 @@ export default function BlogsPage() {
       content: post.content,
       excerpt: post.excerpt || '',
       coverImage: post.coverImage || '',
+      videoUrl: post.videoUrl || '',
       category: post.category || '',
       tags: post.tags.join(', '),
       isPublished: post.isPublished,
@@ -158,6 +181,7 @@ export default function BlogsPage() {
         content: formData.content,
         excerpt: formData.excerpt || formData.content.substring(0, 200) + '...',
         coverImage: formData.coverImage || null,
+        videoUrl: formData.videoUrl || null,
         category: formData.category || null,
         tags: formData.tags.split(',').map(t => t.trim()).filter(t => t),
         isPublished: publish,
@@ -179,6 +203,46 @@ export default function BlogsPage() {
       toast.error(error.response?.data?.error?.message || 'Failed to save blog post');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File | null) => {
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const result = await uploadMedia(file);
+
+      if (result.resourceType !== 'image') {
+        throw new Error('Please upload an image file');
+      }
+
+      setFormData(prev => ({ ...prev, coverImage: result.secureUrl }));
+      toast.success('Image uploaded successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleVideoUpload = async (file: File | null) => {
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      const result = await uploadMedia(file);
+
+      if (result.resourceType !== 'video') {
+        throw new Error('Please upload a video file');
+      }
+
+      setFormData(prev => ({ ...prev, videoUrl: result.secureUrl }));
+      toast.success('Video uploaded successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Failed to upload video');
+    } finally {
+      setUploadingVideo(false);
     }
   };
 
@@ -332,6 +396,7 @@ export default function BlogsPage() {
                 <thead className="bg-gray-50 border-b border-gray-100">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Post</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Views</th>
@@ -347,6 +412,12 @@ export default function BlogsPage() {
                           <p className="font-medium text-gray-900 truncate">{post.title}</p>
                           <p className="text-sm text-gray-500 truncate">{post.excerpt}</p>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                          {post.videoUrl ? <Video className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                          {post.videoUrl ? 'Video' : 'Article'}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         {post.category ? (
@@ -522,7 +593,77 @@ export default function BlogsPage() {
                     placeholder="https://example.com/image.jpg"
                   />
                 </div>
+                <label className="mt-3 flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition cursor-pointer">
+                  {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin text-primary-600" /> : <Upload className="w-4 h-4 text-gray-500" />}
+                  <span className="text-sm text-gray-700">{uploadingImage ? 'Uploading image...' : 'Upload cover image'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      handleImageUpload(file);
+                      e.currentTarget.value = '';
+                    }}
+                  />
+                </label>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+                  <div className="relative">
+                    <Video className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="https://res.cloudinary.com/.../video/upload/..."
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Optional. If a video URL is present, the post will render as a video post on the frontend.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Upload Video to Cloudinary</label>
+                  <label className="flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-xl hover:bg-gray-50 transition cursor-pointer">
+                    {uploadingVideo ? <Loader2 className="w-4 h-4 animate-spin text-primary-600" /> : <Upload className="w-4 h-4 text-gray-500" />}
+                    <span className="text-sm text-gray-700">{uploadingVideo ? 'Uploading...' : 'Choose video file'}</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        handleVideoUpload(file);
+                        e.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+                  <p className="text-xs text-gray-500 mt-2">Uploads now go through the protected backend Cloudinary integration.</p>
+                </div>
+              </div>
+
+              {formData.coverImage && (
+                <div className="rounded-xl border border-gray-200 overflow-hidden">
+                  <img
+                    src={formData.coverImage}
+                    alt="Cover preview"
+                    className="w-full max-h-80 object-cover bg-gray-100"
+                  />
+                </div>
+              )}
+
+              {formData.videoUrl && (
+                <div className="rounded-xl border border-gray-200 overflow-hidden">
+                  <video
+                    src={formData.videoUrl}
+                    controls
+                    preload="metadata"
+                    className="w-full max-h-80 bg-black"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Content *</label>

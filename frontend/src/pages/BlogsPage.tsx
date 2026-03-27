@@ -4,8 +4,8 @@ import { HorizontalAd, SquareAd } from '@/components/AdUnit';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import {
-  FileText, Search, Calendar, Clock, User, Eye,
-  ChevronRight, Tag, TrendingUp, BookOpen, Loader2
+  FileText, Search, Calendar, Clock, User,
+  ChevronRight, BookOpen, Loader2, PlayCircle, TrendingUp
 } from 'lucide-react';
 
 interface BlogPost {
@@ -25,13 +25,13 @@ interface BlogPost {
   views: number;
   featuredImage?: string;
   coverImage?: string;
+  videoUrl?: string | null;
   tags: string[];
   status: string;
 }
 
 export default function BlogsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['blogs'],
@@ -42,29 +42,15 @@ export default function BlogsPage() {
   });
 
   const posts: BlogPost[] = data?.blogs || [];
-  const categories = ['all', 'News', 'Analysis', 'Opinion', 'Education', 'Rankings', 'Accountability'];
 
   const filteredPosts = posts.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.excerpt?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
 
   const featuredPost = posts[0];
   const popularPosts = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'News': return 'bg-blue-100 text-blue-700';
-      case 'Analysis': return 'bg-purple-100 text-purple-700';
-      case 'Opinion': return 'bg-orange-100 text-orange-700';
-      case 'Education': return 'bg-emerald-100 text-emerald-700';
-      case 'Rankings': return 'bg-yellow-100 text-yellow-700';
-      case 'Accountability': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
 
   const getAuthorName = (author: BlogPost['author']) => {
     if (!author) return 'Editorial Team';
@@ -108,56 +94,8 @@ export default function BlogsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 -mt-12 mb-8">
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="bg-emerald-50 p-2 rounded-lg">
-                <FileText className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
-                <p className="text-sm text-gray-500">Articles</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-50 p-2 rounded-lg">
-                <Eye className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{posts.reduce((a, p) => a + (p.views || 0), 0).toLocaleString()}</p>
-                <p className="text-sm text-gray-500">Total Views</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="bg-purple-50 p-2 rounded-lg">
-                <Tag className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{categories.length - 1}</p>
-                <p className="text-sm text-gray-500">Categories</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="bg-orange-50 p-2 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{posts.filter(p => p.publishedAt && new Date(p.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</p>
-                <p className="text-sm text-gray-500">This Week</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Search & Filters */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4 mb-8 shadow-sm">
+        <div className="-mt-12 mb-8 bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -168,21 +106,6 @@ export default function BlogsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
-            </div>
-            <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition ${
-                    selectedCategory === cat
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {cat === 'all' ? 'All' : cat}
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -198,21 +121,31 @@ export default function BlogsPage() {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               {/* Featured Post */}
-              {featuredPost && selectedCategory === 'all' && !searchQuery && (
+              {featuredPost && !searchQuery && (
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition">
                   <div className="h-64 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-                    {(featuredPost.coverImage || featuredPost.featuredImage) ? (
+                    {featuredPost.videoUrl ? (
+                      <video
+                        src={featuredPost.videoUrl}
+                        controls
+                        preload="metadata"
+                        className="w-full h-full object-cover bg-black"
+                      />
+                    ) : (featuredPost.coverImage || featuredPost.featuredImage) ? (
                       <img src={featuredPost.coverImage || featuredPost.featuredImage} alt={featuredPost.title} className="w-full h-full object-cover" />
                     ) : (
                       <BookOpen className="w-20 h-20 text-white/50" />
                     )}
                   </div>
                   <div className="p-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(featuredPost.category)}`}>
-                        {featuredPost.category}
-                      </span>
-                      <span className="text-sm text-gray-500">Featured</span>
+                    <div className="flex items-center space-x-3 mb-4 text-sm text-gray-500">
+                      <span>Featured</span>
+                      {featuredPost.videoUrl && (
+                        <span className="inline-flex items-center gap-1">
+                          <PlayCircle className="w-4 h-4" />
+                          Video
+                        </span>
+                      )}
                     </div>
                     <Link to={`/blogs/${featuredPost.slug}`}>
                       <h2 className="text-2xl font-bold text-gray-900 mb-3 hover:text-primary-600 transition">
@@ -250,14 +183,27 @@ export default function BlogsPage() {
               {/* Posts List */}
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  {searchQuery ? 'Search Results' : selectedCategory === 'all' ? 'Latest Articles' : selectedCategory}
+                  {searchQuery ? 'Search Results' : 'Latest Articles'}
                 </h2>
                 <div className="space-y-4">
                   {filteredPosts.map((post) => (
                     <div key={post.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition group">
                       <div className="flex gap-5">
                         <div className="hidden sm:flex w-32 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex-shrink-0 items-center justify-center overflow-hidden">
-                          {(post.coverImage || post.featuredImage) ? (
+                          {post.videoUrl ? (
+                            <div className="relative w-full h-full">
+                              <video
+                                src={post.videoUrl}
+                                preload="metadata"
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover bg-black"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                                <PlayCircle className="w-8 h-8 text-white" />
+                              </div>
+                            </div>
+                          ) : (post.coverImage || post.featuredImage) ? (
                             <img src={post.coverImage || post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
                           ) : (
                             <FileText className="w-8 h-8 text-gray-400" />
@@ -265,12 +211,15 @@ export default function BlogsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2">
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getCategoryColor(post.category)}`}>
-                              {post.category}
-                            </span>
                             <span className="text-xs text-gray-400">
                               {formatDate(post.publishedAt)}
                             </span>
+                            {post.videoUrl && (
+                              <span className="inline-flex items-center gap-1 text-xs text-primary-600 font-medium">
+                                <PlayCircle className="w-3 h-3" />
+                                Video
+                              </span>
+                            )}
                           </div>
                           <Link to={`/blogs/${post.slug}`}>
                             <h3 className="font-bold text-gray-900 mb-1 group-hover:text-primary-600 transition line-clamp-2">
@@ -287,10 +236,6 @@ export default function BlogsPage() {
                               <span className="flex items-center">
                                 <Clock className="w-3 h-3 mr-1" />
                                 {post.readTime || 5} min
-                              </span>
-                              <span className="flex items-center">
-                                <Eye className="w-3 h-3 mr-1" />
-                                {(post.views || 0).toLocaleString()}
                               </span>
                             </div>
                             <Link
@@ -337,9 +282,12 @@ export default function BlogsPage() {
                         <h4 className="text-sm font-medium text-gray-900 group-hover:text-primary-600 transition line-clamp-2">
                           {post.title}
                         </h4>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {(post.views || 0).toLocaleString()} views
-                        </p>
+                        {post.videoUrl && (
+                          <p className="text-xs text-primary-600 mt-1 inline-flex items-center gap-1">
+                            <PlayCircle className="w-3 h-3" />
+                            Video
+                          </p>
+                        )}
                       </div>
                     </Link>
                   ))}
@@ -348,26 +296,6 @@ export default function BlogsPage() {
 
               {/* Ad in sidebar */}
               <SquareAd className="rounded-xl overflow-hidden" />
-
-              {/* Categories */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5">
-                <h3 className="font-bold text-gray-900 mb-4">Categories</h3>
-                <div className="space-y-2">
-                  {categories.filter(c => c !== 'all').map(category => {
-                    const count = posts.filter(p => p.category === category).length;
-                    return (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50 transition text-left"
-                      >
-                        <span className="text-gray-700">{category}</span>
-                        <span className="text-sm text-gray-400">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Tags */}
               <div className="bg-white rounded-xl border border-gray-100 p-5">

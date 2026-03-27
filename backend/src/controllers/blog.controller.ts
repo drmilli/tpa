@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
+import { cloudinaryService } from '../services/cloudinary.service';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +26,7 @@ export class BlogController {
             slug: true,
             excerpt: true,
             coverImage: true,
-            category: true,
+            videoUrl: true,
             tags: true,
             publishedAt: true,
             views: true,
@@ -106,14 +107,14 @@ export class BlogController {
         throw new AppError('Blog not found', 404);
       }
 
-      await prisma.blog.update({
+      const updatedBlog = await prisma.blog.update({
         where: { id: blog.id },
         data: { views: { increment: 1 } },
       });
 
       res.json({
         success: true,
-        data: blog,
+        data: updatedBlog,
       });
     } catch (error) {
       next(error);
@@ -162,6 +163,33 @@ export class BlogController {
       res.json({
         success: true,
         message: 'Blog deleted successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async uploadMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      const file = req.file;
+
+      if (!file) {
+        throw new AppError('No file uploaded', 400);
+      }
+
+      if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/')) {
+        throw new AppError('Only image and video uploads are supported', 400);
+      }
+
+      const upload = await cloudinaryService.uploadBuffer(file.buffer, {
+        folder: file.mimetype.startsWith('video/') ? 'tpa/blog-videos' : 'tpa/blog-images',
+        filename: file.originalname,
+        mimeType: file.mimetype,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: upload,
       });
     } catch (error) {
       next(error);

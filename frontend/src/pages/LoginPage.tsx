@@ -196,14 +196,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo Credentials (for development) */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-xs text-yellow-800 font-medium mb-2">Demo Credentials:</p>
-            <p className="text-xs text-yellow-700">Email: admin@thepeoplesaffairs.com</p>
-            <p className="text-xs text-yellow-700">Password: (set during database seed)</p>
-          </div>
-        )}
       </div>
     </div>
   );

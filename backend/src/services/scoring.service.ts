@@ -4,7 +4,9 @@ import axios from 'axios';
 import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 // Scoring weights for different metrics
 const SCORING_WEIGHTS = {
@@ -206,6 +208,11 @@ export class ScoringService {
    */
   async analyzeSentimentWithAI(politicianName: string): Promise<number> {
     try {
+      if (!openai) {
+        logger.warn('OpenAI not configured, using neutral sentiment fallback');
+        return 0;
+      }
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -301,6 +308,10 @@ Return ONLY a JSON object in this exact format:
     if (headlines.length === 0) return 0;
 
     try {
+      if (!openai) {
+        return 0;
+      }
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -329,6 +340,10 @@ Return ONLY a JSON object in this exact format:
    */
   async getAIBasedNewsAnalysis(politicianName: string): Promise<NewsAnalysis> {
     try {
+      if (!openai) {
+        return { totalMentions: 10, sentimentScore: 0, topTopics: [], recentHeadlines: [] };
+      }
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
@@ -538,6 +553,17 @@ Return ONLY a JSON object in this exact format:
    */
   async getAIComprehensiveAnalysis(politician: any, newsAnalysis: NewsAnalysis): Promise<any> {
     try {
+      if (!openai) {
+        return {
+          strengths: [],
+          weaknesses: [],
+          keyAchievements: [],
+          areasOfConcern: [],
+          publicPerception: 'AI analysis unavailable because OpenAI is not configured.',
+          recommendation: 'Configure OPENAI_API_KEY to enable AI-generated analysis.',
+        };
+      }
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [

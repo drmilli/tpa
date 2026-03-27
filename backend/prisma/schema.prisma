@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model AuditLog {
@@ -47,6 +48,7 @@ model Blog {
   content     String
   excerpt     String?
   coverImage  String?
+  videoUrl    String?
   authorId    String
   category    String?
   tags        String[]
